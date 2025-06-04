@@ -1,0 +1,3 @@
+C:/Users/natha/OneDrive/Desktop/Coding/FCG/FCG_trabalho-final/build/CMakeFiles/main.dir
+C:/Users/natha/OneDrive/Desktop/Coding/FCG/FCG_trabalho-final/build/CMakeFiles/edit_cache.dir
+C:/Users/natha/OneDrive/Desktop/Coding/FCG/FCG_trabalho-final/build/CMakeFiles/rebuild_cache.dir
