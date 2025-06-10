@@ -228,6 +228,7 @@ bool d_press = false;
 bool w_press = false;
 bool mouse_move = false;
 bool paused = false;
+bool first_person_view = true;
 float speedmultiplier = 1.0f;
 
 int main(int argc, char* argv[])
@@ -314,9 +315,10 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-    ObjModel winebottlemodel("../../data/wine/wine_bottles_01_4k.obj");
-    ComputeNormals(&winebottlemodel);
-    BuildTrianglesAndAddToVirtualScene(&winebottlemodel);
+    ObjModel bunnymodel("../../data/bunny.obj");
+    ComputeNormals(&bunnymodel);
+    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+
 
     if ( argc > 1 )
     {
@@ -374,8 +376,8 @@ int main(int argc, char* argv[])
         glm::vec4 player_position = glm::vec4((0.0f,0.0f,0.0f,1.0f) + deslocar); // Posição da câmera em coordenadas globais
         glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 speed = glm::vec4(5.0f*speedmultiplier, 5.0f*speedmultiplier, 5.0f*speedmultiplier, 0.0f);
-        glm::vec4 camera_position_c;
-        glm::vec4 camera_view_vector = player_view_vector;; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_position_c = player_position;
+        glm::vec4 camera_view_vector = player_view_vector; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         glm::vec4 view_frente = -camera_view_vector/norm(camera_view_vector);
         glm::vec4 view_lado = crossproduct(camera_up_vector,view_frente)/norm(crossproduct(camera_up_vector,view_frente));
@@ -454,10 +456,7 @@ int main(int argc, char* argv[])
         #define WINE 3
         #define GUN 4
         
-        model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
-        DrawVirtualObject("the_bunny");
+
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-3.0f,0.0f)
         * Matrix_Scale(100.0f, 1.0f, 100.0f); // Translação e escala do plano
