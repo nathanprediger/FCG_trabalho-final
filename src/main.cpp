@@ -337,6 +337,8 @@ int main(int argc, char* argv[])
     glm::vec4 deslocar = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     int sense = 50;
     bool lastpaused = paused;
+    double timeprev = glfwGetTime();
+    glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -369,23 +371,27 @@ int main(int argc, char* argv[])
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::vec4 speed = glm::vec4(0.05f*speedmultiplier, 0.05f*speedmultiplier, 0.05f*speedmultiplier, 0.0f);
-        glm::vec4 camera_position_c  = glm::vec4((0.0f,0.0f,0.0f,1.0f) + deslocar);
-        glm::vec4 camera_view_vector = glm::vec4(x,-y,z,0.0f); // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 player_position = glm::vec4((0.0f,0.0f,0.0f,1.0f) + deslocar); // Posição da câmera em coordenadas globais
+        glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 speed = glm::vec4(5.0f*speedmultiplier, 5.0f*speedmultiplier, 5.0f*speedmultiplier, 0.0f);
+        glm::vec4 camera_position_c;
+        glm::vec4 camera_view_vector = player_view_vector;; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         glm::vec4 view_frente = -camera_view_vector/norm(camera_view_vector);
         glm::vec4 view_lado = crossproduct(camera_up_vector,view_frente)/norm(crossproduct(camera_up_vector,view_frente));
         view_frente.y = 0.0f; // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
         view_frente = view_frente/norm(view_frente); // Normalizamos o vetor "view_frente"
+        double timenow = glfwGetTime();
+        glm::vec4 timenowvec = glm::vec4(timenow, timenow, timenow, 0.0f);
         if(!paused){
             if(w_press)
-                deslocar-= speed*view_frente;
+                deslocar-= speed*view_frente*(timenowvec - timeprevec);
             if(a_press)
-                deslocar-=speed*view_lado;
+                deslocar-=speed*view_lado*(timenowvec - timeprevec);
             if(s_press)
-                deslocar+= speed*view_frente;
+                deslocar+= speed*view_frente*(timenowvec - timeprevec);
             if(d_press)
-                deslocar+=speed*view_lado;
+                deslocar+=speed*view_lado*(timenowvec - timeprevec);
         }
         if(lastpaused != paused)
         {
@@ -401,6 +407,7 @@ int main(int argc, char* argv[])
             }
             lastpaused = paused;
         }
+        timeprevec = timenowvec;
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -445,7 +452,12 @@ int main(int argc, char* argv[])
         #define BUNNY  1
         #define PLANE  2
         #define WINE 3
-
+        #define GUN 4
+        
+        model = Matrix_Translate(camera_position_c.x, camera_position_c.y, camera_position_c.z);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_bunny");
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,-3.0f,0.0f)
         * Matrix_Scale(100.0f, 1.0f, 100.0f); // Translação e escala do plano
@@ -1227,6 +1239,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
             speedmultiplier = 3.0f;
         else if (action == GLFW_RELEASE)
             speedmultiplier = 1.0f;
+    }
+    else if((key == GLFW_KEY_V && action == GLFW_PRESS)){
+        first_person_view = !first_person_view;
     }
 
 
