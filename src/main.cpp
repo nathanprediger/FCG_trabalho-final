@@ -219,7 +219,12 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
-
+ 
+// SKYBOX SHADERS VAR
+GLuint g_GpuProgramSkyboxID = 0;
+GLint g_skybox_model_uniform;
+GLint g_skybox_view_uniform;
+GLint g_skybox_projection_uniform;
 // Número de texturas carregadas pela função LoadTextureImage()
 GLuint g_NumLoadedTextures = 0;
 bool a_press = false;
@@ -309,6 +314,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0); // TextureImage1
     LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1); // TextureImage2
+    LoadTextureImage("../../data/skyboxes/bambanani_sunset_4k.hdr", 0); // TextureImage3
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -318,6 +324,10 @@ int main(int argc, char* argv[])
     ObjModel bunnymodel("../../data/bunny.obj");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
+
+    ObjModel spheremodel("../../data/skyboxes/sphere.obj");
+    ComputeNormals(&spheremodel);
+    BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
 
     if ( argc > 1 )
@@ -367,7 +377,7 @@ int main(int argc, char* argv[])
         // variáveis g_CameraDistance, g_CameraPhi, e g_CameraTheta são
         // controladas pelo mouse do usuário. Veja as funções CursorPosCallback()
         // e ScrollCallback().
-        float r = g_CameraDistance;
+        float r = g_CameraDistance*1.5;
         float y = r*sin(g_CameraPhi);
         float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
@@ -464,18 +474,31 @@ int main(int argc, char* argv[])
         #define WINE 3
         #define GUN 4
 
-        model = Matrix_Translate(player_position.x, player_position.y, player_position.z);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, PLANE);
-        DrawVirtualObject("the_bunny");
+        if(first_person_view== false){    
+            model = Matrix_Translate(player_position.x, player_position.y, player_position.z);
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BUNNY);
+            DrawVirtualObject("the_bunny");
+        }
 
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,0.0f,0.0f)
-        * Matrix_Scale(100.0f, 1.0f, 100.0f); // Translação e escala do plano
+        * Matrix_Scale(50.0f, 1.0f, 50.0f); // Translação e escala do plano
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
+        glUseProgram(g_GpuProgramSkyboxID);
+        glDepthFunc(GL_LEQUAL);
+        glCullFace(GL_FRONT);
+        model = Matrix_Translate(0.0f, 0.0f, 0.0f) * Matrix_Scale(100.0f, 100.0f, 100.0f);
+        glUniformMatrix4fv(g_skybox_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
+        glUniformMatrix4fv(g_skybox_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
+        glUniformMatrix4fv(g_skybox_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        DrawVirtualObject("Sphere_Sphere");
+        glUseProgram(g_GpuProgramID);
+        glCullFace(GL_BACK);
+        glDepthFunc(GL_LESS);
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
         TextRendering_ShowEulerAngles(window);
@@ -625,6 +648,8 @@ void LoadShadersFromFiles()
     //
     GLuint vertex_shader_id = LoadShader_Vertex("../../src/shader_vertex.glsl");
     GLuint fragment_shader_id = LoadShader_Fragment("../../src/shader_fragment.glsl");
+    GLuint skybox_vertex_shader_id = LoadShader_Vertex("../../src/skybox_vertex.glsl");
+    GLuint skybox_fragment_shader_id = LoadShader_Fragment("../../src/skybox_fragment.glsl");
 
     // Deletamos o programa de GPU anterior, caso ele exista.
     if ( g_GpuProgramID != 0 )
@@ -633,6 +658,10 @@ void LoadShadersFromFiles()
     // Criamos um programa de GPU utilizando os shaders carregados acima.
     g_GpuProgramID = CreateGpuProgram(vertex_shader_id, fragment_shader_id);
 
+    if ( g_GpuProgramSkyboxID != 0 )
+        glDeleteProgram(g_GpuProgramSkyboxID);
+    
+    g_GpuProgramSkyboxID = CreateGpuProgram(skybox_vertex_shader_id, skybox_fragment_shader_id);
     // Buscamos o endereço das variáveis definidas dentro do Vertex Shader.
     // Utilizaremos estas variáveis para enviar dados para a placa de vídeo
     // (GPU)! Veja arquivo "shader_vertex.glsl" e "shader_fragment.glsl".
@@ -648,6 +677,13 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
+    glUseProgram(0);
+    //Skybox dados placa de video e variaveis
+    g_skybox_model_uniform      = glGetUniformLocation(g_GpuProgramSkyboxID, "model");
+    g_skybox_view_uniform       = glGetUniformLocation(g_GpuProgramSkyboxID, "view");
+    g_skybox_projection_uniform = glGetUniformLocation(g_GpuProgramSkyboxID, "projection");
+    glUseProgram(g_GpuProgramSkyboxID);
+    glUniform1i(glGetUniformLocation(g_GpuProgramSkyboxID, "skybox"), 3); // Variável "skybox" em shader_skybox_fragment.glsl
     glUseProgram(0);
 }
 

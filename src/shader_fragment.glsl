@@ -118,8 +118,8 @@ void main()
         Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
     }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    else
-        Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
+    if ( object_id != PLANE )
+        Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
