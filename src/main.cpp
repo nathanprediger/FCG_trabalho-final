@@ -373,17 +373,25 @@ int main(int argc, char* argv[])
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::vec4 player_position = glm::vec4((0.0f,0.0f,0.0f,1.0f) + deslocar); // Posição da câmera em coordenadas globais
-        glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 camera_position_c;
+        glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
+        glm::vec4 player_position = glm::vec4((0.0f,0.0f,0.0f,1.0f) + deslocar); // Posição do player
+        glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde o player está virado
         glm::vec4 speed = glm::vec4(5.0f*speedmultiplier, 5.0f*speedmultiplier, 5.0f*speedmultiplier, 0.0f);
-        glm::vec4 camera_position_c = player_position;
-        glm::vec4 camera_view_vector = player_view_vector; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        double timenow = glfwGetTime();
+        if(first_person_view == false){
+            camera_position_c = player_position  + glm::vec4(x,y,z,0.0f);
+            camera_view_vector = player_position - camera_position_c;
+        }
+        else{
+            camera_position_c = player_position;
+            camera_view_vector = player_view_vector;
+        }
         glm::vec4 view_frente = -camera_view_vector/norm(camera_view_vector);
         glm::vec4 view_lado = crossproduct(camera_up_vector,view_frente)/norm(crossproduct(camera_up_vector,view_frente));
         view_frente.y = 0.0f; // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
         view_frente = view_frente/norm(view_frente); // Normalizamos o vetor "view_frente"
-        double timenow = glfwGetTime();
         glm::vec4 timenowvec = glm::vec4(timenow, timenow, timenow, 0.0f);
         if(!paused){
             if(w_press)
@@ -420,7 +428,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -100.0f; // Posição do "far plane"
+        float farplane  = -50.0f; // Posição do "far plane"
         if (g_UsePerspectiveProjection)
         {
             // Projeção Perspectiva.
@@ -455,10 +463,14 @@ int main(int argc, char* argv[])
         #define PLANE  2
         #define WINE 3
         #define GUN 4
-        
+
+        model = Matrix_Translate(player_position.x, player_position.y, player_position.z);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, PLANE);
+        DrawVirtualObject("the_bunny");
 
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f,-3.0f,0.0f)
+        model = Matrix_Translate(0.0f,0.0f,0.0f)
         * Matrix_Scale(100.0f, 1.0f, 100.0f); // Translação e escala do plano
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);

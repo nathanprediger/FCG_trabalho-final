@@ -98,7 +98,6 @@ void main()
         // tanto, veja por exemplo o mapeamento da variável 'p_v' utilizando
         // 'h' no slides 158-160 do documento Aula_20_Mapeamento_de_Texturas.pdf.
         // Veja também a Questão 4 do Questionário 4 no Moodle.
-
         float minx = bbox_min.x;
         float maxx = bbox_max.x;
 
@@ -108,8 +107,8 @@ void main()
         float minz = bbox_min.z;
         float maxz = bbox_max.z;
 
-        U = 0.0;
-        V = 0.0;
+        U = (position_model.x - minx)/(maxx - minx);
+        V = (position_model.y - miny)/(maxy -miny);
     }
     else if ( object_id == PLANE )
     {
@@ -120,7 +119,7 @@ void main()
     }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     else
-        Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
+        Kd0 = texture(TextureImage1, vec2(U,V)).rgb;
 
     // Equação de Iluminação
     float lambert = max(0,dot(n,l));
