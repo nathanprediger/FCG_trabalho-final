@@ -151,6 +151,9 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
+//Novas Funcoes
+glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double t);
+
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
 struct SceneObject
@@ -349,6 +352,7 @@ int main(int argc, char* argv[])
     glm::vec4 deslocar = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     int sense = 50;
     bool lastpaused = paused;
+    double bunnybrezt = 0;
     double timeprev = glfwGetTime();
     glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
 
@@ -427,6 +431,7 @@ int main(int argc, char* argv[])
             }
             lastpaused = paused;
         }
+        double timedif = timenowvec.x-timeprevec.x;
         timeprevec = timenowvec;
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
@@ -487,6 +492,22 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
+        if(bunnybrezt >= 2)
+            bunnybrezt*=-1;
+        bunnybrezt+=timedif*1;
+        printf("%f\n", abs(bunnybrezt));
+        
+        glm::vec4 brez_pos;
+        glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
+        glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(19.0f,0.0f, 3.0f, 1.0f), glm::vec4(15.0f,0.0f, 10.0f,1.0f), glm::vec4(18.0f,0.0f,2.0f,1.0f)};
+        if(abs(bunnybrezt) < 1)
+            brez_pos = cubic_bezier_curve(b_points1, abs(bunnybrezt));
+        else
+            brez_pos = cubic_bezier_curve(b_points2, abs(bunnybrezt) - 1);
+        model = Matrix_Translate(brez_pos.x, 1, brez_pos.z);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BUNNY);
+        DrawVirtualObject("the_bunny");
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -1597,4 +1618,17 @@ void PrintObjModelInfo(ObjModel* model)
   }
 }
 
+glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double t){
+    glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
+    double tcube = pow(t,3);
+    double tsquare = pow(t,2);
+    double negtcube = pow(1-t, 3);
+    double negtsquare = pow(1-t, 2);
+    double coefs[4] = {negtcube, 3*negtsquare*t, 3*tsquare*(1-t), tsquare};
+    for(int i = 0; i < 4; i++){
+        pos += points[i]*Matrix_Scale(coefs[i], coefs[i], coefs[i]);
+    }
+    return pos;
 
+
+}
