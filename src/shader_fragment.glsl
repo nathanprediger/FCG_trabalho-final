@@ -22,6 +22,7 @@ uniform mat4 projection;
 #define SPHERE 0
 #define BUNNY  1
 #define PLANE  2
+#define WINE 3
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -40,8 +41,12 @@ out vec4 color;
 #define M_PI   3.14159265358979323846
 #define M_PI_2 1.57079632679489661923
 
+#define BLINN_PHONG 0 
+#define LAMBERT 1
+
 void main()
 {
+    
     // Obtemos a posição da câmera utilizando a inversa da matriz que define o
     // sistema de coordenadas da câmera.
     vec4 origin = vec4(0.0, 0.0, 0.0, 1.0);
@@ -56,14 +61,28 @@ void main()
 
     // Normal do fragmento atual, interpolada pelo rasterizador a partir das
     // normais de cada vértice.
-    vec4 n = normalize(normal);
+    vec4 n = normalize(normal); 
+
+    vec4 Lp = vec4(0.0,30.0,1.0,1.0);
 
     // Vetor que define o sentido da fonte de luz em relação ao ponto atual.
-    vec4 l = normalize(vec4(1.0,1.0,0.0,0.0));
+    vec4 l = normalize(Lp-p);
 
     // Vetor que define o sentido da câmera em relação ao ponto atual.
     vec4 v = normalize(camera_position - p);
 
+    // Vetor que define o sentido da reflexão especular ideal.
+    vec4 r = normalize(-l+2*n*(dot(n,l))); // PREENCHA AQUI o vetor de reflexão especular ideal
+
+    vec4 w = normalize(vec4(0.0,-1.0,0.0,0.0));
+
+    vec4 h = normalize(v+l);
+
+    vec3 Ks; // Refletância especular
+    vec3 Ka; // Refletância ambiente
+    float q;
+
+    int illumination_type = 0;
     // Coordenadas de textura U e V
     float U = 0.0;
     float V = 0.0;
@@ -109,6 +128,13 @@ void main()
 
         U = (position_model.x - minx)/(maxx - minx);
         V = (position_model.y - miny)/(maxy -miny);
+
+        illumination_type = BLINN_PHONG;
+
+        Ka = vec3(0.04, 0.2, 0.4);
+        Ks = vec3(0.8, 0.8, 0.8);
+
+        q = 32;
     }
     else if ( object_id == PLANE )
     {
@@ -116,15 +142,43 @@ void main()
         U = texcoords.x;
         V = texcoords.y;
         Kd0 = texture(TextureImage2, vec2(U,V)).rgb;
+
+        Ks = vec3(0.3, 0.3, 0.3);
+        Ka = vec3(0.0,0.0,0.0);
+        q = 20.0;
+
+        illumination_type = LAMBERT;
     }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     if ( object_id != PLANE )
         Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
 
-    // Equação de Iluminação
-    float lambert = max(0,dot(n,l));
+    // Espectro da fonte de iluminação
+    vec3 I = vec3(1.0, 1.0, 1.0); // PREENCH AQUI o espectro da fonte de luz
 
-    color.rgb = Kd0 * (lambert + 0.01);
+    // Espectro da luz ambiente
+    vec3 Ia = vec3(0.2, 0.2, 0.2); // PREENCHA AQUI o espectro da luz ambiente
+
+    // Equação de Iluminação
+    vec3 lambert = I*max(0,dot(n,l));
+
+    // Termo ambiente
+    vec3 ambient_term = Ka*Ia;
+
+    // Termo especular utilizando o modelo de iluminação de Blinn-Phong
+    vec3 blinn_phong_specular_term  = Ks*I*pow(dot(n.xyz,h.xyz),q);
+
+    if(dot(w.xyz,(normalize(p-Lp)).xyz)>=cos(radians(30.0))){
+        if(illumination_type == LAMBERT){
+        color.rgb = Kd0 * (lambert + vec3(0.01));
+        }
+        else{
+        color.rgb = Kd0 * (lambert + vec3(0.01)) + ambient_term + blinn_phong_specular_term;
+        }
+    }
+    else
+        color.rgb = Kd0 * (lambert + vec3(0.005)) + ambient_term;
+    
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
     // necessário:
