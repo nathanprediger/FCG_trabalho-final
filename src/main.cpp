@@ -152,7 +152,7 @@ void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 //Novas Funcoes
-glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double t);
+glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double *t, double speedmult, double timedif);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);      // TextureImage0
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0); // TextureImage1
     LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1); // TextureImage2
-    LoadTextureImage("../../data/skyboxes/bambanani_sunset_4k.hdr", 0); // TextureImage3
+    LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -396,6 +396,8 @@ int main(int argc, char* argv[])
         double timenow = glfwGetTime();
         if(first_person_view == false){
             camera_position_c = player_position  + glm::vec4(x,y,z,0.0f);
+            if(camera_position_c.y <= 0.05f)
+                camera_position_c.y = 0.05f;
             camera_view_vector = player_position - camera_position_c;
         }
         else{
@@ -492,19 +494,22 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
-        if(bunnybrezt >= 2)
-            bunnybrezt*=-1;
-        bunnybrezt+=timedif*1;
-        printf("%f\n", abs(bunnybrezt));
+        printf("%f\n", (bunnybrezt));
         
         glm::vec4 brez_pos;
         glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
-        glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(19.0f,0.0f, 3.0f, 1.0f), glm::vec4(15.0f,0.0f, 10.0f,1.0f), glm::vec4(18.0f,0.0f,2.0f,1.0f)};
-        if(abs(bunnybrezt) < 1)
-            brez_pos = cubic_bezier_curve(b_points1, abs(bunnybrezt));
-        else
-            brez_pos = cubic_bezier_curve(b_points2, abs(bunnybrezt) - 1);
-        model = Matrix_Translate(brez_pos.x, 1, brez_pos.z);
+        glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(12.0f,0.0f, 3.0f, 1.0f), glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
+        double b1_speed = 0.5f;
+        double b2_speed = 0.5f;
+        if(!paused){
+            if(abs(bunnybrezt) < 1)
+                brez_pos = cubic_bezier_curve(b_points1, &bunnybrezt, b1_speed, timedif);
+            else
+                brez_pos = cubic_bezier_curve(b_points2, &bunnybrezt, b2_speed, timedif);
+            if(bunnybrezt >= 2)
+                bunnybrezt*=-1;
+        }
+        model = Matrix_Translate(brez_pos.x, 1.0f, brez_pos.z);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
@@ -1618,16 +1623,20 @@ void PrintObjModelInfo(ObjModel* model)
   }
 }
 
-glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double t){
+glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double *t, double speedmult, double timedif){
     glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    double tcube = pow(t,3);
-    double tsquare = pow(t,2);
-    double negtcube = pow(1-t, 3);
-    double negtsquare = pow(1-t, 2);
-    double coefs[4] = {negtcube, 3*negtsquare*t, 3*tsquare*(1-t), tsquare};
-    for(int i = 0; i < 4; i++){
+    double speed;
+    double tval = (abs(*t) >= 1) ? abs(*t) - 1 : abs(*t);
+    double tcube = pow(tval,3);
+    double tsquare = pow(tval,2);
+    double negtcube = pow(1-tval, 3);
+    double negtsquare = pow(1-tval, 2);
+    double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tsquare};
+    for(int i = 0; i < 3; i++)
+        speed += norm(points[i] - points[i+1])/3;
+    for(int i = 0; i < 4; i++)
         pos += points[i]*Matrix_Scale(coefs[i], coefs[i], coefs[i]);
-    }
+    *t += timedif*speedmult*speed;
     return pos;
 
 
