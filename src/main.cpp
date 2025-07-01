@@ -29,7 +29,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-
+#include <set>
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
 #include <GLFW/glfw3.h>  // Criação de janelas do sistema operacional
@@ -223,6 +223,8 @@ GLint g_object_id_uniform;
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
  
+//
+GLint g_leon_part_uniform; // Uniform para parte do Leon
 // SKYBOX SHADERS VAR
 GLuint g_GpuProgramSkyboxID = 0;
 GLint g_skybox_model_uniform;
@@ -318,6 +320,14 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0); // TextureImage1
     LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1); // TextureImage2
     LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
+    // Texturas Leon
+    LoadTextureImage("../../data/leon/PLO1_EYE.png", 0); // TextureImage4
+    LoadTextureImage("../../data/leon/PLO6_FACE.png", 0); // TextureImage5
+    LoadTextureImage("../../data/leon/PLO1_HAIR.png", 0); // TextureImage6
+    LoadTextureImage("../../data/leon/PLO5_GLASS.png", 0); // TextureImage7
+    LoadTextureImage("../../data/leon/PLO6_HAND.png", 0); // TextureImage8
+    LoadTextureImage("../../data/leon/PLO2_CLOTH.png", 0); // TextureImage9
+    LoadTextureImage("../../data/leon/plo2_knife_only_64.png", 0); // TextureImage10
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -332,6 +342,17 @@ int main(int argc, char* argv[])
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
 
+    ObjModel leonmodel("../../data/leon/JD3L9JZFR7UB7NMGULPCJC51T.obj");
+    ComputeNormals(&leonmodel);
+    BuildTrianglesAndAddToVirtualScene(&leonmodel);
+
+    ObjModel malezombiemodel("../../data/malezombie/CYNK865RS02V30O6J0DW08AHV.obj");
+    ComputeNormals(&malezombiemodel);
+    BuildTrianglesAndAddToVirtualScene(&malezombiemodel);
+
+    ObjModel femalezombiemodel("../../data/femalezombie/00MGC5O1PDBT3MS4X048REERB.obj");
+    ComputeNormals(&femalezombiemodel);
+    BuildTrianglesAndAddToVirtualScene(&femalezombiemodel);
 
     if ( argc > 1 )
     {
@@ -703,6 +724,14 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_eye"), 4);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_face"), 5);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hair"), 6);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_glass"), 7);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hand"), 8);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_cloth"), 9);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_knife"), 10);
+
     glUseProgram(0);
     //Skybox dados placa de video e variaveis
     g_skybox_model_uniform      = glGetUniformLocation(g_GpuProgramSkyboxID, "model");

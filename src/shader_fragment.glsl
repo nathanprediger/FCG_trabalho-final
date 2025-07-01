@@ -33,6 +33,14 @@ uniform vec4 bbox_max;
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
+uniform sampler2D Leon_eye
+uniform sampler2D Leon_face
+uniform sampler2D Leon_hair
+uniform sampler2D Leon_glass
+uniform sampler2D Leon_hand
+uniform sampler2D Leon_cloth
+uniform sampler2D Leon_knife
+
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -149,6 +157,11 @@ void main()
 
         illumination_type = LAMBERT;
     }
+    else if (object_id == LEON){
+        switch(leon_part){
+            case 0: color.rgb = texture(Leon_eye, vec2(U,V)).rgb;
+        }
+    }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     if ( object_id != PLANE )
         Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
@@ -172,7 +185,7 @@ void main()
         if(illumination_type == LAMBERT){
         color.rgb = Kd0 * (lambert + vec3(0.01));
         }
-        else{
+        else if (illumination_type == BLINN_PHONG) {
         color.rgb = Kd0 * (lambert + vec3(0.01)) + ambient_term + blinn_phong_specular_term;
         }
     }
