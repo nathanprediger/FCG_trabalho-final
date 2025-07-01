@@ -1,0 +1,45 @@
+
+#include <glm/mat4x4.hpp>
+#include <glm/vec4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+
+struct Plane {
+    glm::vec3 normal;
+    glm::vec3 point;
+
+    Plane(const glm::vec3& n, const glm::vec3& p) : normal(n), point(p) {}
+};
+
+struct Sphere {
+    glm::vec3 center;
+    float radius;
+
+    Sphere(const glm::vec3& c, float r) : center(c), radius(r) {}
+
+    bool colideWithPoint(const glm::vec3& ponto) const {
+        return glm::length(ponto - center) <= radius;
+    }
+
+};
+
+struct Cube {
+    glm::vec3 max;
+    glm::vec3 min;
+    Cube(const glm::vec3& m, const glm::vec3& n) : max(m), min(n) {}
+    bool colideWithCube(const Cube& other) const {
+        return (max.x >= other.min.x && min.x <= other.max.x) &&
+               (max.y >= other.min.y && min.y <= other.max.y) &&
+               (max.z >= other.min.z && min.z <= other.max.z);
+    }
+    bool colideWithPlane(const Plane& Plane){
+        glm::vec3 center = (max + min) / 2.0f;
+        glm::vec3 extents = (max - min) / 2.0f;
+        float d = glm::dot(Plane.normal, center - Plane.point);
+        float r = glm::dot(glm::abs(Plane.normal), extents);
+        return std::abs(d) <= r;
+    }
+};
