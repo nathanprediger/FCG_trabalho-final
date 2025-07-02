@@ -151,8 +151,6 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
-//Novas Funcoes
-glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double *t, double speedmult, double timedif);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -166,6 +164,22 @@ struct SceneObject
     glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
     glm::vec3    bbox_max;
 };
+
+typedef struct bezier_curve_pair{
+    glm::vec4 points[4];
+    double arcsize; // para ter aproximadamente uma velocidade constante ao longo da curva
+} Bezier_curve;
+
+typedef struct bez_path{
+    Bezier_curve cur_curve;
+    struct bez_path* next_curve;
+}Bezier_path;
+
+//Novas Funcoes
+glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, double timedif);
+double approximate_curve_size(glm::vec4 points[4], int approx_precision);
+Bezier_curve define_cubic_bezier(glm::vec4 points[4]);
+Bezier_path *link_curves();//placeholdfers
 
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
 
@@ -240,6 +254,7 @@ bool mouse_move = false;
 bool paused = false;
 bool first_person_view = true;
 float speedmultiplier = 1.0f;
+
 
 int main(int argc, char* argv[])
 {
@@ -518,22 +533,25 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
-        printf("%f\n", (bunnybrezt));
+        //printf("%f\n", (bunnybrezt));
         
 
         
 
 
         glm::vec4 brez_pos;
+
         glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
-        glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(12.0f,0.0f, 3.0f, 1.0f), glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
-        double b1_speed = 0.5f;
-        double b2_speed = 0.5f;
+        glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(11.0f,0.0f, 2.0f, 1.0f), glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
+        Bezier_curve curve1 = define_cubic_bezier(b_points1);
+        Bezier_curve curve2 = define_cubic_bezier(b_points2);
+        double b1_speed = 5.0f;
+        double b2_speed = 5.0f;
         if(!paused){
             if(abs(bunnybrezt) < 1)
-                brez_pos = cubic_bezier_curve(b_points1, &bunnybrezt, b1_speed, timedif);
+                brez_pos = cubic_bezier_curve(curve1, &bunnybrezt, b1_speed, timedif);
             else
-                brez_pos = cubic_bezier_curve(b_points2, &bunnybrezt, b2_speed, timedif);
+                brez_pos = cubic_bezier_curve(curve2, &bunnybrezt, b2_speed, timedif);
             if(bunnybrezt >= 2)
                 bunnybrezt*=-1;
         }
@@ -1682,19 +1700,46 @@ void PrintObjModelInfo(ObjModel* model)
   }
 }
 
-glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double *t, double speedmult, double timedif){
+glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, double timedif){
     glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    double speed = 0.0;
     double tval = (abs(*t) >= 1) ? abs(*t) - 1 : abs(*t);
     double tcube = pow(tval,3);
     double tsquare = pow(tval,2);
     double negtcube = pow(1-tval, 3);
     double negtsquare = pow(1-tval, 2);
     double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tcube};
-    for(int i = 0; i < 3; i++)
-        speed += norm(points[i] - points[i+1])/3;
     for(int i = 0; i < 4; i++)
-        pos += points[i] * (float)coefs[i];
-    *t += timedif*speedmult*speed;
+        pos += bez_c.points[i] * (float)coefs[i];
+    *t += (timedif*speedmult)/bez_c.arcsize;
     return pos;
 }
+
+Bezier_curve define_cubic_bezier(glm::vec4 points[4]){
+    Bezier_curve ret;
+    ret.arcsize = approximate_curve_size(points, 30);
+    for(int i = 0;i < 4; i++)
+        ret.points[i] = points[i];
+    return ret;
+}
+
+double approximate_curve_size(glm::vec4 points[4], int approx_precision){
+    double tval, tcube, tsquare, negtcube, negtsquare;
+    double sumofdist = 0;
+    glm::vec4 prev_point = points[0];
+    glm::vec4 cur_point = glm::vec4(0.0f,0.0f,0.0f,1.0f);
+    for (int i = 1; i <= approx_precision; i++){
+        tval = (double)i/approx_precision;
+        tcube = pow(tval,3);
+        tsquare = pow(tval,2);
+        negtcube = pow(1-tval, 3);
+        negtsquare = pow(1-tval, 2);
+        double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tcube};
+        for(int j = 0; j < 4; j++)
+            cur_point += points[j] * (float)coefs[j];
+        sumofdist += abs(norm(cur_point - prev_point));
+        prev_point = cur_point;
+        cur_point = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    } 
+    return sumofdist;
+}
+

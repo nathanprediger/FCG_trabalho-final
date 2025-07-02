@@ -470,7 +470,9 @@ CMakeFiles/main.dir/src/main.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_tra
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_iterator_base_types.h \
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_map.h \
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_multimap.h \
+  C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_multiset.h \
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_pair.h \
+  C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_set.h \
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_stack.h \
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_tempbuf.h \
   C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_tree.h \
@@ -515,6 +517,7 @@ CMakeFiles/main.dir/src/main.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_tra
   C:/msys64/ucrt64/include/c++/14.2.0/map \
   C:/msys64/ucrt64/include/c++/14.2.0/new \
   C:/msys64/ucrt64/include/c++/14.2.0/ostream \
+  C:/msys64/ucrt64/include/c++/14.2.0/set \
   C:/msys64/ucrt64/include/c++/14.2.0/sstream \
   C:/msys64/ucrt64/include/c++/14.2.0/stack \
   C:/msys64/ucrt64/include/c++/14.2.0/stdexcept \
@@ -1592,8 +1595,6 @@ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512bf16vlintrin.h:
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512fp16intrin.h:
 
-C:/msys64/ucrt64/include/c++/14.2.0/type_traits:
-
 C:/msys64/ucrt64/include/inttypes.h:
 
 C:/msys64/ucrt64/include/limits.h:
@@ -1850,11 +1851,11 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/detail/func_ge
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vbmi2vlintrin.h:
 
+C:/msys64/ucrt64/include/c++/14.2.0/vector:
+
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avx512vbmiintrin.h:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/detail/type_mat3x3.hpp:
-
-C:/msys64/ucrt64/include/c++/14.2.0/vector:
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/avxintrin.h:
 
@@ -2246,9 +2247,9 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/ext/vector_rel
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/ext/vector_bool2_precision.hpp:
 
-C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_set.h:
-
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/ext/vector_bool3.hpp:
+
+C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_set.h:
 
 C:/msys64/ucrt64/include/c++/14.2.0/system_error:
 
@@ -2321,6 +2322,8 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/mat3x2.hpp:
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/mat4x2.hpp:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/mat4x4.hpp:
+
+C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_multiset.h:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/trigonometric.hpp:
 
@@ -2434,6 +2437,8 @@ C:/msys64/ucrt64/include/sys/timeb.h:
 
 C:/msys64/ucrt64/include/c++/14.2.0/ostream:
 
+C:/msys64/ucrt64/include/c++/14.2.0/set:
+
 C:/msys64/ucrt64/include/c++/14.2.0/sstream:
 
 C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_relops.h:
@@ -2443,6 +2448,8 @@ C:/msys64/ucrt64/include/c++/14.2.0/stack:
 C:/msys64/ucrt64/include/c++/14.2.0/stdlib.h:
 
 C:/msys64/ucrt64/include/c++/14.2.0/streambuf:
+
+C:/msys64/ucrt64/include/c++/14.2.0/type_traits:
 
 C:/msys64/ucrt64/include/c++/14.2.0/typeinfo:
 
@@ -2497,7 +2504,3 @@ C:/msys64/ucrt64/include/time.h:
 C:/msys64/ucrt64/include/wctype.h:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/stb_image.cpp:
-
-C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_multiset.h:
-
-C:/msys64/ucrt64/include/c++/14.2.0/set:
