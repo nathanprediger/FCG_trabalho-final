@@ -30,6 +30,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <set>
+#include <iostream>
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
 #include <GLFW/glfw3.h>  // Criação de janelas do sistema operacional
@@ -346,6 +347,16 @@ int main(int argc, char* argv[])
     ComputeNormals(&leonmodel);
     BuildTrianglesAndAddToVirtualScene(&leonmodel);
 
+    std::map<std::string, GLuint> texture_name_to_id;
+
+    for (const auto& material : leonmodel.materials) {
+        if (!material.diffuse_texname.empty() && texture_name_to_id.count(material.diffuse_texname) == 0) {
+        std::string texpath = std::string("../../data/leon/") + material.diffuse_texname;
+        LoadTextureImage(texpath.c_str(), 0);
+        texture_name_to_id[material.diffuse_texname] = g_NumLoadedTextures - 1;
+    }
+}
+
     ObjModel malezombiemodel("../../data/malezombie/CYNK865RS02V30O6J0DW08AHV.obj");
     ComputeNormals(&malezombiemodel);
     BuildTrianglesAndAddToVirtualScene(&malezombiemodel);
@@ -518,7 +529,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
-        printf("%f\n", (bunnybrezt));
+        // printf("%f\n", (bunnybrezt));
         
 
         
@@ -542,24 +553,43 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
-        // LEON
-        model =  Matrix_Translate(0.0f, 0.0f, 0.0f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, LEON);
-        glUniform1i(g_leon_part_uniform, 0); // Parte do Leon
-        DrawVirtualObject("leon_eye");
-        glUniform1i(g_leon_part_uniform, 1); // Parte do Leon
-        DrawVirtualObject("leon_face");
-        glUniform1i(g_leon_part_uniform, 2); // Parte do Leon
-        DrawVirtualObject("leon_hair");
-        glUniform1i(g_leon_part_uniform, 3); // Parte do Leon
-        DrawVirtualObject("leon_glass");
-        glUniform1i(g_leon_part_uniform, 4); // Parte do Leon
-        DrawVirtualObject("leon_hand");
-        glUniform1i(g_leon_part_uniform, 5); // Parte do Leon
-        DrawVirtualObject("leon_cloth");
-        glUniform1i(g_leon_part_uniform, 6); // Parte do Leon
-        DrawVirtualObject("leon_knife");
+        for (size_t i = 0; i < leonmodel.shapes.size(); ++i)
+        {
+            const auto &shape = leonmodel.shapes[i];
+            // Pegue o material do primeiro face (assume que o shape tem um material só)
+            int material_id = shape.mesh.material_ids.empty() ? -1 : shape.mesh.material_ids[0];
+            if (material_id < 0)
+                continue;
+            const auto &material = leonmodel.materials[material_id];
+
+            // Ative a textura difusa do material, se existir
+            if (!material.diffuse_texname.empty())
+            {
+                GLuint tex_unit = texture_name_to_id[material.diffuse_texname];
+                glActiveTexture(GL_TEXTURE0 + tex_unit);
+                glBindTexture(GL_TEXTURE_2D, tex_unit);
+                glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage0"), tex_unit);
+            }
+
+            // Envie parâmetros do material para o shader (adicione esses uniforms no seu shader!)
+            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ka"), 1, material.ambient);
+            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Kd"), 1, material.diffuse);
+            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ks"), 1, material.specular);
+            glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_q"), material.shininess);
+
+            // Defina o object_id para LEON
+            glUniform1i(g_object_id_uniform, LEON);
+
+            // Defina a matriz model (ajuste a posição se quiser)
+            glm::mat4 model = Matrix_Translate(10.0f, 0.0f, 10.0f)
+                * Matrix_Rotate_X(-M_PI/2.0f); // Rotaciona 90 graus em X
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            std::cout << "Shape: " << shape.name
+                      << " | Material: " << material.name
+                      << " | Texture: " << material.diffuse_texname << std::endl;
+            // Desenhe o shape
+            DrawVirtualObject(shape.name.c_str());
+        }
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -752,13 +782,6 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_eye"), 4);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_face"), 5);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hair"), 6);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_glass"), 7);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hand"), 8);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_cloth"), 9);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_knife"), 10);
 
 
 
@@ -1684,17 +1707,19 @@ void PrintObjModelInfo(ObjModel* model)
 
 glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double *t, double speedmult, double timedif){
     glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    double speed = 0.0;
+    double speed;
     double tval = (abs(*t) >= 1) ? abs(*t) - 1 : abs(*t);
     double tcube = pow(tval,3);
     double tsquare = pow(tval,2);
     double negtcube = pow(1-tval, 3);
     double negtsquare = pow(1-tval, 2);
-    double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tcube};
+    double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tsquare};
     for(int i = 0; i < 3; i++)
         speed += norm(points[i] - points[i+1])/3;
     for(int i = 0; i < 4; i++)
-        pos += points[i] * (float)coefs[i];
+        pos += points[i]*Matrix_Scale(coefs[i], coefs[i], coefs[i]);
     *t += timedif*speedmult*speed;
     return pos;
+
+
 }
