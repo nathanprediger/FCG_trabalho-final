@@ -23,23 +23,24 @@ uniform mat4 projection;
 #define BUNNY  1
 #define PLANE  2
 #define WINE 3
+#define LEON 5
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
 uniform vec4 bbox_min;
 uniform vec4 bbox_max;
-
+uniform int leon_part;
 // Variáveis para acesso das imagens de textura
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
-uniform sampler2D Leon_eye
-uniform sampler2D Leon_face
-uniform sampler2D Leon_hair
-uniform sampler2D Leon_glass
-uniform sampler2D Leon_hand
-uniform sampler2D Leon_cloth
-uniform sampler2D Leon_knife
+uniform sampler2D Leon_eye;
+uniform sampler2D Leon_face;
+uniform sampler2D Leon_hair;
+uniform sampler2D Leon_glass;
+uniform sampler2D Leon_hand;
+uniform sampler2D Leon_cloth;
+uniform sampler2D Leon_knife;
 
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -158,14 +159,26 @@ void main()
         illumination_type = LAMBERT;
     }
     else if (object_id == LEON){
+        Ka = vec3(0.04, 0.2, 0.4);
+        Ks = vec3(0.8, 0.8, 0.8);
+        illumination_type = BLINN_PHONG;
+        q = 32;
+        U = texcoords.x;
+        V = texcoords.y;
         switch(leon_part){
-            case 0: color.rgb = texture(Leon_eye, vec2(U,V)).rgb;
+            case 0: Kd0 = texture(Leon_eye, vec2(U,V)).rgb; break;
+            case 1: Kd0 = texture(Leon_face, vec2(U,V)).rgb;break;
+            case 2: Kd0 = texture(Leon_hair, vec2(U,V)).rgb;break;
+            case 3: Kd0 = texture(Leon_glass, vec2(U,V)).rgb;break;
+            case 4: Kd0 = texture(Leon_hand, vec2(U,V)).rgb;break;
+            case 5: Kd0 = texture(Leon_cloth, vec2(U,V)).rgb;break;
+            case 6: Kd0 = texture(Leon_knife, vec2(U,V)).rgb;break;
+            default: break;
         }
     }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
-    if ( object_id != PLANE )
+    if ( object_id == BUNNY )
         Kd0 = texture(TextureImage0, vec2(U,V)).rgb;
-
     // Espectro da fonte de iluminação
     vec3 I = vec3(1.0, 1.0, 1.0); // PREENCH AQUI o espectro da fonte de luz
 

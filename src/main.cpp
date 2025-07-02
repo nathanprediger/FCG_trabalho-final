@@ -326,7 +326,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/leon/PLO1_HAIR.png", 0); // TextureImage6
     LoadTextureImage("../../data/leon/PLO5_GLASS.png", 0); // TextureImage7
     LoadTextureImage("../../data/leon/PLO6_HAND.png", 0); // TextureImage8
-    LoadTextureImage("../../data/leon/PLO2_CLOTH.png", 0); // TextureImage9
+    LoadTextureImage("../../data/leon/PLO6_CLOTH.png", 0); // TextureImage9
     LoadTextureImage("../../data/leon/plo2_knife_only_64.png", 0); // TextureImage10
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -501,6 +501,9 @@ int main(int argc, char* argv[])
         #define PLANE  2
         #define WINE 3
         #define GUN 4
+        #define LEON 5
+        #define MALEZOMBIE 6
+        #define FEMALEZOMBIE 7
 
         if(first_person_view== false){    
             model = Matrix_Translate(player_position.x, player_position.y, player_position.z);
@@ -517,6 +520,10 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_plane");
         printf("%f\n", (bunnybrezt));
         
+
+        
+
+
         glm::vec4 brez_pos;
         glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
         glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(12.0f,0.0f, 3.0f, 1.0f), glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
@@ -535,6 +542,25 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
+        // LEON
+        model =  Matrix_Translate(0.0f, 0.0f, 0.0f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, LEON);
+        glUniform1i(g_leon_part_uniform, 0); // Parte do Leon
+        DrawVirtualObject("leon_eye");
+        glUniform1i(g_leon_part_uniform, 1); // Parte do Leon
+        DrawVirtualObject("leon_face");
+        glUniform1i(g_leon_part_uniform, 2); // Parte do Leon
+        DrawVirtualObject("leon_hair");
+        glUniform1i(g_leon_part_uniform, 3); // Parte do Leon
+        DrawVirtualObject("leon_glass");
+        glUniform1i(g_leon_part_uniform, 4); // Parte do Leon
+        DrawVirtualObject("leon_hand");
+        glUniform1i(g_leon_part_uniform, 5); // Parte do Leon
+        DrawVirtualObject("leon_cloth");
+        glUniform1i(g_leon_part_uniform, 6); // Parte do Leon
+        DrawVirtualObject("leon_knife");
+
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
         glCullFace(GL_FRONT);
@@ -546,6 +572,8 @@ int main(int argc, char* argv[])
         glUseProgram(g_GpuProgramID);
         glCullFace(GL_BACK);
         glDepthFunc(GL_LESS);
+
+        
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
         TextRendering_ShowEulerAngles(window);
@@ -731,6 +759,8 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hand"), 8);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_cloth"), 9);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_knife"), 10);
+
+
 
     glUseProgram(0);
     //Skybox dados placa de video e variaveis
@@ -1654,19 +1684,17 @@ void PrintObjModelInfo(ObjModel* model)
 
 glm::vec4 cubic_bezier_curve(glm::vec4 points[4], double *t, double speedmult, double timedif){
     glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    double speed;
+    double speed = 0.0;
     double tval = (abs(*t) >= 1) ? abs(*t) - 1 : abs(*t);
     double tcube = pow(tval,3);
     double tsquare = pow(tval,2);
     double negtcube = pow(1-tval, 3);
     double negtsquare = pow(1-tval, 2);
-    double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tsquare};
+    double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tcube};
     for(int i = 0; i < 3; i++)
         speed += norm(points[i] - points[i+1])/3;
     for(int i = 0; i < 4; i++)
-        pos += points[i]*Matrix_Scale(coefs[i], coefs[i], coefs[i]);
+        pos += points[i] * (float)coefs[i];
     *t += timedif*speedmult*speed;
     return pos;
-
-
 }
