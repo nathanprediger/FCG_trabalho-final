@@ -24,6 +24,8 @@ uniform mat4 projection;
 #define PLANE  2
 #define WINE 3
 #define LEON 5
+#define MALEZOMBIE 6
+#define FEMALEZOMBIE 7
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -46,6 +48,7 @@ uniform vec3 material_Ka;
 uniform vec3 material_Kd;
 uniform vec3 material_Ks;
 uniform float material_q;
+uniform int u_has_texture; 
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -162,15 +165,23 @@ void main()
 
         illumination_type = LAMBERT;
     }
-    else if (object_id == LEON) {
+    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE) {
         Ka = material_Ka;
         Ks = material_Ks;
         q = material_q;
         U = texcoords.x;
         V = texcoords.y;
-        Kd0 = material_Kd * texture(TextureImage0, vec2(U,V)).rgb;
         illumination_type = BLINN_PHONG;
-    }     
+
+        // Lógica condicional para a cor difusa
+        if (u_has_texture == 1) {
+            // Se tem textura, multiplica a cor do material pela cor da textura
+            Kd0 = material_Kd * texture(TextureImage0, vec2(U,V)).rgb;
+        } else {
+            // Se NÃO tem textura, usa apenas a cor do material
+            Kd0 = material_Kd;
+        }
+    }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     if ( object_id == BUNNY )
         Kd0 = texture(TextureImage0, vec2(U,V)).rgb;

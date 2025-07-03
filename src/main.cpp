@@ -30,6 +30,8 @@
 #include <stdexcept>
 #include <algorithm>
 #include <set>
+#include <iostream>
+
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>   // Criação de contexto OpenGL 3.3
 #include <GLFW/glfw3.h>  // Criação de janelas do sistema operacional
@@ -115,8 +117,10 @@ void PopMatrix(glm::mat4& M);
 void BuildTrianglesAndAddToVirtualScene(ObjModel*); // Constrói representação de um ObjModel como malha de triângulos para renderização
 void ComputeNormals(ObjModel* model); // Computa normais de um ObjModel, caso não existam.
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
-void LoadTextureImage(const char* filename, int type); // Função que carrega imagens de textura
+GLuint LoadTextureImage(const char* filename, int type); // Função que carrega imagens de textura
+std::map<std::string, GLuint> LoadTexturesFromObjModel(ObjModel* model, std::string base_path); // Carrega texturas de um modelo obj
 void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
+void DrawVirtualObjectMtl(const char* object_name, ObjModel* model, std::map<std::string, GLuint> textures_name_to_id, int obj_num); // Dsenha objetos com mtl
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
@@ -194,7 +198,7 @@ std::stack<glm::mat4>  g_MatrixStack;
 
 // Razão de proporção da janela (largura/altura). Veja função FramebufferSizeCallback().
 float g_ScreenRatio = 1.0f;
-
+#define M_PI   3.14159265358979323846
 // Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
 float g_AngleX = 0.0f;
 float g_AngleY = 0.0f;
@@ -236,6 +240,7 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
+GLint g_has_texture_uniform;
  
 //
 GLint g_leon_part_uniform; // Uniform para parte do Leon
@@ -336,13 +341,13 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1); // TextureImage2
     LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
     // Texturas Leon
-    LoadTextureImage("../../data/leon/PLO1_EYE.png", 0); // TextureImage4
-    LoadTextureImage("../../data/leon/PLO6_FACE.png", 0); // TextureImage5
-    LoadTextureImage("../../data/leon/PLO1_HAIR.png", 0); // TextureImage6
-    LoadTextureImage("../../data/leon/PLO5_GLASS.png", 0); // TextureImage7
-    LoadTextureImage("../../data/leon/PLO6_HAND.png", 0); // TextureImage8
-    LoadTextureImage("../../data/leon/PLO6_CLOTH.png", 0); // TextureImage9
-    LoadTextureImage("../../data/leon/plo2_knife_only_64.png", 0); // TextureImage10
+    // LoadTextureImage("../../data/leon/PLO1_EYE.png", 0); // TextureImage4
+    // LoadTextureImage("../../data/leon/PLO6_FACE.png", 0); // TextureImage5
+    // LoadTextureImage("../../data/leon/PLO1_HAIR.png", 0); // TextureImage6
+    // LoadTextureImage("../../data/leon/PLO5_GLASS.png", 0); // TextureImage7
+    // LoadTextureImage("../../data/leon/PLO6_HAND.png", 0); // TextureImage8
+    // LoadTextureImage("../../data/leon/PLO6_CLOTH.png", 0); // TextureImage9
+    // LoadTextureImage("../../data/leon/plo2_knife_only_64.png", 0); // TextureImage10
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -360,15 +365,17 @@ int main(int argc, char* argv[])
     ObjModel leonmodel("../../data/leon/JD3L9JZFR7UB7NMGULPCJC51T.obj");
     ComputeNormals(&leonmodel);
     BuildTrianglesAndAddToVirtualScene(&leonmodel);
+    std::map<std::string, GLuint> leon_textures = LoadTexturesFromObjModel(&leonmodel, "../../data/leon/");
 
-    ObjModel malezombiemodel("../../data/malezombie/CYNK865RS02V30O6J0DW08AHV.obj");
+    ObjModel malezombiemodel("../../data/malezombie/F00DQG8JS2X7AFI95CFGV3WQT.obj");
     ComputeNormals(&malezombiemodel);
     BuildTrianglesAndAddToVirtualScene(&malezombiemodel);
+    std::map<std::string, GLuint> malezombie_textures = LoadTexturesFromObjModel(&malezombiemodel, "../../data/malezombie/");
 
     ObjModel femalezombiemodel("../../data/femalezombie/00MGC5O1PDBT3MS4X048REERB.obj");
     ComputeNormals(&femalezombiemodel);
     BuildTrianglesAndAddToVirtualScene(&femalezombiemodel);
-
+    std::map<std::string, GLuint> femalezombie_textures = LoadTexturesFromObjModel(&femalezombiemodel, "../../data/femalezombie/");
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -561,23 +568,22 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_bunny");
 
         // LEON
-        model =  Matrix_Translate(0.0f, 0.0f, 0.0f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, LEON);
-        glUniform1i(g_leon_part_uniform, 0); // Parte do Leon
-        DrawVirtualObject("leon_eye");
-        glUniform1i(g_leon_part_uniform, 1); // Parte do Leon
-        DrawVirtualObject("leon_face");
-        glUniform1i(g_leon_part_uniform, 2); // Parte do Leon
-        DrawVirtualObject("leon_hair");
-        glUniform1i(g_leon_part_uniform, 3); // Parte do Leon
-        DrawVirtualObject("leon_glass");
-        glUniform1i(g_leon_part_uniform, 4); // Parte do Leon
-        DrawVirtualObject("leon_hand");
-        glUniform1i(g_leon_part_uniform, 5); // Parte do Leon
-        DrawVirtualObject("leon_cloth");
-        glUniform1i(g_leon_part_uniform, 6); // Parte do Leon
-        DrawVirtualObject("leon_knife");
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Translate(0.0f, 0.0f, 0.0f) * Matrix_Rotate_X(-M_PI / 2.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        DrawVirtualObjectMtl("leon", &leonmodel, leon_textures, LEON);
+        
+        // FEMALE ZOMBIE
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Translate(5.0f, 0.0f, 5.0f) * Matrix_Rotate_X(-M_PI / 2.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        DrawVirtualObjectMtl("femalezombie", &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
+
+        // MALE ZOMBIE
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Translate(2.5f, 0.0f, 2.5f) * Matrix_Rotate_X(-M_PI / 2.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        DrawVirtualObjectMtl("malezombie", &malezombiemodel, malezombie_textures, MALEZOMBIE);
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -626,7 +632,7 @@ int main(int argc, char* argv[])
 }
 
 // Função que carrega uma imagem para ser utilizada como textura
-void LoadTextureImage(const char* filename, int type)
+GLuint LoadTextureImage(const char* filename, int type)
 {
     printf("Carregando imagem \"%s\"... ", filename);
 
@@ -681,8 +687,27 @@ void LoadTextureImage(const char* filename, int type)
     stbi_image_free(data);
 
     g_NumLoadedTextures += 1;
+
+    return texture_id;
 }
 
+std::map<std::string, GLuint> LoadTexturesFromObjModel(ObjModel *model, std::string base_path)
+{
+    std::map<std::string, GLuint> texture_name_to_id;
+
+    for (const auto &material : model->materials)
+    {
+        if (!material.diffuse_texname.empty() && texture_name_to_id.count(material.diffuse_texname) == 0)
+        {
+            std::string texpath = base_path + material.diffuse_texname;
+
+            GLuint loaded_texture_id = LoadTextureImage(texpath.c_str(), 0);
+            texture_name_to_id[material.diffuse_texname] = loaded_texture_id;
+        }
+    }
+
+    return texture_name_to_id;
+}
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
 // dos objetos na função BuildTrianglesAndAddToVirtualScene().
 void DrawVirtualObject(const char* object_name)
@@ -714,6 +739,45 @@ void DrawVirtualObject(const char* object_name)
     // "Desligamos" o VAO, evitando assim que operações posteriores venham a
     // alterar o mesmo. Isso evita bugs.
     glBindVertexArray(0);
+}
+
+void DrawVirtualObjectMtl(const char *object_name, ObjModel *model, std::map<std::string, GLuint> textures_name_to_id, int obj_num)
+{
+    for (size_t i = 0; i < model->shapes.size(); ++i)
+        {
+            const auto &shape = model->shapes[i];
+            int material_id = shape.mesh.material_ids.empty() ? -1 : shape.mesh.material_ids[0];
+            if (material_id < 0)
+                continue;
+            const auto &material = model->materials[material_id];
+
+            // Ative a textura difusa do material, se existir
+            if (!material.diffuse_texname.empty())
+            {
+                // Diz ao shader que TEMOS uma textura para usar
+                glUniform1i(g_has_texture_uniform, 1);
+
+                GLuint texture_id = textures_name_to_id[material.diffuse_texname];
+                glBindTexture(GL_TEXTURE_2D, texture_id);
+            }
+            else
+            {
+                // Diz ao shader que NÃO TEMOS uma textura, então ele deve usar apenas a cor
+                glUniform1i(g_has_texture_uniform, 0);
+            }
+
+            // Envie parâmetros do material para o shader
+            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ka"), 1, material.ambient);
+            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Kd"), 1, material.diffuse);
+            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ks"), 1, material.specular);
+            glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_q"), material.shininess);
+
+            // Defina o object_id para LEON
+            glUniform1i(g_object_id_uniform, obj_num);
+
+            // Desenhe o shape
+            DrawVirtualObject(shape.name.c_str());
+        }
 }
 
 // Função que carrega os shaders de vértices e de fragmentos que serão
@@ -764,20 +828,13 @@ void LoadShadersFromFiles()
     g_object_id_uniform  = glGetUniformLocation(g_GpuProgramID, "object_id"); // Variável "object_id" em shader_fragment.glsl
     g_bbox_min_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_min");
     g_bbox_max_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_max");
+    g_has_texture_uniform = glGetUniformLocation(g_GpuProgramID, "u_has_texture");
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(g_GpuProgramID);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage0"), 0);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage1"), 1);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureImage2"), 2);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_eye"), 4);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_face"), 5);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hair"), 6);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_glass"), 7);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_hand"), 8);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_cloth"), 9);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "Leon_knife"), 10);
-
 
 
     glUseProgram(0);
