@@ -1,0 +1,37 @@
+#pragma once
+
+#include <glm/mat4x4.hpp>
+#include <glm/vec4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+// Estrutura para um plano
+struct Plane {
+    glm::vec3 normal;
+    glm::vec3 point;
+
+    Plane(const glm::vec3& n, const glm::vec3& p);
+};
+
+// Estrutura para uma esfera
+struct Sphere {
+    glm::vec3 center;
+    float radius;
+
+    Sphere(const glm::vec3& c, float r);
+
+    bool colideWithPoint(const glm::vec3& ponto) const;
+};
+
+// Estrutura para um cubo (AABB)
+struct Cube {
+    glm::vec3 max;
+    glm::vec3 min;
+
+    Cube(const glm::vec3& m, const glm::vec3& n);
+
+    bool colideWithCube(const Cube& other) const;
+    bool colideWithPlane(const Plane& plane);
+};

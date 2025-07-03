@@ -36,19 +36,14 @@ uniform int leon_part;
 uniform sampler2D TextureImage0;
 uniform sampler2D TextureImage1;
 uniform sampler2D TextureImage2;
-// uniform sampler2D Leon_eye;
-// uniform sampler2D Leon_face;
-// uniform sampler2D Leon_hair;
-// uniform sampler2D Leon_glass;
-// uniform sampler2D Leon_hand;
-// uniform sampler2D Leon_cloth;
-// uniform sampler2D Leon_knife;
 
 uniform vec3 material_Ka;
 uniform vec3 material_Kd;
 uniform vec3 material_Ks;
 uniform float material_q;
+uniform float material_opacity;
 uniform int u_has_texture; 
+
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -97,6 +92,7 @@ void main()
     vec3 Ks; // Refletância especular
     vec3 Ka; // Refletância ambiente
     float q;
+    float alfa = 1.0;
 
     int illumination_type = 0;
     // Coordenadas de textura U e V
@@ -169,6 +165,7 @@ void main()
         Ka = material_Ka;
         Ks = material_Ks;
         q = material_q;
+        alfa = material_opacity;
         U = texcoords.x;
         V = texcoords.y;
         illumination_type = BLINN_PHONG;
@@ -189,7 +186,7 @@ void main()
     vec3 I = vec3(1.0, 1.0, 1.0); // PREENCH AQUI o espectro da fonte de luz
 
     // Espectro da luz ambiente
-    vec3 Ia = vec3(0.2, 0.2, 0.2); // PREENCHA AQUI o espectro da luz ambiente
+    vec3 Ia = vec3(1.0, 1.0, 1.0); // PREENCHA AQUI o espectro da luz ambiente
 
     // Equação de Iluminação
     vec3 lambert = I*max(0,dot(n,l));
@@ -224,7 +221,7 @@ void main()
     //    suas distâncias para a câmera (desenhando primeiro objetos
     //    transparentes que estão mais longe da câmera).
     // Alpha default = 1 = 100% opaco = 0% transparente
-    color.a = 1;
+    color.a = alfa;
 
     // Cor final com correção gamma, considerando monitor sRGB.
     // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas

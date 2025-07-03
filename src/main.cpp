@@ -41,6 +41,7 @@
 #include <glm/vec4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
 // Headers da biblioteca para carregar modelos obj
 #include <tiny_obj_loader.h>
 
@@ -49,7 +50,7 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
-
+#include "collisions.h"
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -245,8 +246,6 @@ GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
 GLint g_has_texture_uniform;
  
-//
-GLint g_leon_part_uniform; // Uniform para parte do Leon
 // SKYBOX SHADERS VAR
 GLuint g_GpuProgramSkyboxID = 0;
 GLint g_skybox_model_uniform;
@@ -262,6 +261,7 @@ bool mouse_move = false;
 bool paused = false;
 bool first_person_view = true;
 float speedmultiplier = 1.0f;
+#define NUM_ENEMIES 15
 
 
 int main(int argc, char* argv[])
@@ -339,18 +339,11 @@ int main(int argc, char* argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);      // TextureImage0
-    LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0); // TextureImage1
-    LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1); // TextureImage2
-    LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
-    // Texturas Leon
-    // LoadTextureImage("../../data/leon/PLO1_EYE.png", 0); // TextureImage4
-    // LoadTextureImage("../../data/leon/PLO6_FACE.png", 0); // TextureImage5
-    // LoadTextureImage("../../data/leon/PLO1_HAIR.png", 0); // TextureImage6
-    // LoadTextureImage("../../data/leon/PLO5_GLASS.png", 0); // TextureImage7
-    // LoadTextureImage("../../data/leon/PLO6_HAND.png", 0); // TextureImage8
-    // LoadTextureImage("../../data/leon/PLO6_CLOTH.png", 0); // TextureImage9
-    // LoadTextureImage("../../data/leon/plo2_knife_only_64.png", 0); // TextureImage10
+    GLuint earth_id = LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);      // TextureImage0
+    GLuint earth_night_id = LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0); // TextureImage1
+    GLuint rocky_terrain_id = LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1); // TextureImage2
+    GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
+    
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -435,19 +428,21 @@ int main(int argc, char* argv[])
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         glm::vec4 camera_position_c;
         glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
-        glm::vec4 player_position = glm::vec4((0.0f,0.0f,0.0f,1.0f) + deslocar); // Posição do player
+        // printa o vetor deslocar
+        printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
+        glm::vec4 player_position = glm::vec4(0.0f+deslocar.x, 0.0f+deslocar.y, 0.0f+deslocar.z, 1.0f); // Posição do player
         glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde o player está virado
         glm::vec4 speed = glm::vec4(5.0f*speedmultiplier, 5.0f*speedmultiplier, 5.0f*speedmultiplier, 0.0f);
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         double timenow = glfwGetTime();
         if(first_person_view == false){
-            camera_position_c = player_position  + glm::vec4(x,y,z,0.0f);
+            camera_position_c = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) + glm::vec4(x,y,z,0.0f);
             if(camera_position_c.y <= 0.05f)
                 camera_position_c.y = 0.05f;
-            camera_view_vector = player_position - camera_position_c;
+            camera_view_vector = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c;
         }
         else{
-            camera_position_c = player_position;
+            camera_position_c = player_position+ glm::vec4(0.0f, 1.5f, 0.0f, 0.0f); // Posição da câmera em primeira pessoa
             camera_view_vector = player_view_vector;
         }
         glm::vec4 view_frente = -camera_view_vector/norm(camera_view_vector);
@@ -531,12 +526,16 @@ int main(int argc, char* argv[])
         #define FEMALEZOMBIE 7
 
         if(first_person_view== false){    
-            model = Matrix_Translate(player_position.x, player_position.y, player_position.z);
-            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-            glUniform1i(g_object_id_uniform, BUNNY);
-            DrawVirtualObject("the_bunny");
+            // LEON
+            glActiveTexture(GL_TEXTURE0);
+            printf("Leon Position: %f %f %f\n", player_position.x, player_position.y, player_position.z);
+            model = Matrix_Translate(player_position.x, player_position.y, player_position.z) * Matrix_Rotate_X(-M_PI / 2.0f);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            DrawVirtualObjectMtl("leon", &leonmodel, leon_textures, LEON);
         }
 
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
         // Desenhamos o plano do chão
         model = Matrix_Translate(0.0f,0.0f,0.0f)
         * Matrix_Scale(50.0f, 1.0f, 50.0f); // Translação e escala do plano
@@ -556,7 +555,9 @@ int main(int argc, char* argv[])
         Bezier_path *coelhito_path = create_path(curve1);
         coelhito_path = link_curve_to_path(coelhito_path, b_points2);
         coelhito_path = link_curve_to_path(coelhito_path, b_points3);
-
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, earth_id);
         double b_speed = 5.0f;
         if(!paused){
             brez_pos = move_along_bezier_path(coelhito_path, &bunnybrezt, b_speed, timedif);
@@ -566,11 +567,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
-        // LEON
-        glActiveTexture(GL_TEXTURE0);
-        model = Matrix_Translate(0.0f, 0.0f, 0.0f) * Matrix_Rotate_X(-M_PI / 2.0f);
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl("leon", &leonmodel, leon_textures, LEON);
+        
         
         // FEMALE ZOMBIE
         glActiveTexture(GL_TEXTURE0);
@@ -770,6 +767,7 @@ void DrawVirtualObjectMtl(const char *object_name, ObjModel *model, std::map<std
             glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Kd"), 1, material.diffuse);
             glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ks"), 1, material.specular);
             glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_q"), material.shininess);
+            glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_opacity"), material.dissolve);
 
             // Defina o object_id para LEON
             glUniform1i(g_object_id_uniform, obj_num);
