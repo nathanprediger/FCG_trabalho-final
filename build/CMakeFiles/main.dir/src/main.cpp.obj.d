@@ -167,6 +167,7 @@ CMakeFiles/main.dir/src/main.cpp.obj: \
  C:/msys64/ucrt64/include/c++/14.2.0/set \
  C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_set.h \
  C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_multiset.h \
+ C:/msys64/ucrt64/include/c++/14.2.0/iostream \
  C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glad/glad.h \
  C:/msys64/ucrt64/include/windows.h C:/msys64/ucrt64/include/sdkddkver.h \
  C:/msys64/ucrt64/include/excpt.h \

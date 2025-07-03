@@ -177,14 +177,17 @@ typedef struct bezier_curve_pair{
 typedef struct bez_path{
     Bezier_curve cur_curve;
     struct bez_path* next_curve;
+    int curve_num;
 }Bezier_path;
 
 //Novas Funcoes
 glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, double timedif);
 double approximate_curve_size(glm::vec4 points[4], int approx_precision);
 Bezier_curve define_cubic_bezier(glm::vec4 points[4]);
-Bezier_path *link_curves();//placeholdfers
-
+Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]);
+Bezier_path* create_path(Bezier_curve curva);
+void clear_curves(Bezier_path* path);
+glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif);
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
 
 // A cena virtual é uma lista de objetos nomeados, guardados em um dicionário
@@ -540,27 +543,23 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
-        //printf("%f\n", (bunnybrezt));
+        printf("%f\n", (bunnybrezt));
         
 
         
-
 
         glm::vec4 brez_pos;
-
         glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
-        glm::vec4 b_points2[4] = {b_points1[3], glm::vec4(11.0f,0.0f, 2.0f, 1.0f), glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
+        glm::vec4 b_points2[2] = {glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
+        glm::vec4 b_points3[2] = {glm::vec4(26.0f, 0.0f, 15.0f, 1.0f), glm::vec4(30.0f, 0.0f, 19.0f, 1.0f)};
         Bezier_curve curve1 = define_cubic_bezier(b_points1);
-        Bezier_curve curve2 = define_cubic_bezier(b_points2);
-        double b1_speed = 5.0f;
-        double b2_speed = 5.0f;
+        Bezier_path *coelhito_path = create_path(curve1);
+        coelhito_path = link_curve_to_path(coelhito_path, b_points2);
+        coelhito_path = link_curve_to_path(coelhito_path, b_points3);
+
+        double b_speed = 5.0f;
         if(!paused){
-            if(abs(bunnybrezt) < 1)
-                brez_pos = cubic_bezier_curve(curve1, &bunnybrezt, b1_speed, timedif);
-            else
-                brez_pos = cubic_bezier_curve(curve2, &bunnybrezt, b2_speed, timedif);
-            if(bunnybrezt >= 2)
-                bunnybrezt*=-1;
+            brez_pos = move_along_bezier_path(coelhito_path, &bunnybrezt, b_speed, timedif);
         }
         model = Matrix_Translate(brez_pos.x, 1.0f, brez_pos.z);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -1759,7 +1758,7 @@ void PrintObjModelInfo(ObjModel* model)
 
 glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, double timedif){
     glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    double tval = (abs(*t) >= 1) ? abs(*t) - 1 : abs(*t);
+    double tval = abs(*t) - floor(abs(*t));
     double tcube = pow(tval,3);
     double tsquare = pow(tval,2);
     double negtcube = pow(1-tval, 3);
@@ -1773,7 +1772,7 @@ glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, do
 
 Bezier_curve define_cubic_bezier(glm::vec4 points[4]){
     Bezier_curve ret;
-    ret.arcsize = approximate_curve_size(points, 30);
+    ret.arcsize = approximate_curve_size(points, 100);
     for(int i = 0;i < 4; i++)
         ret.points[i] = points[i];
     return ret;
@@ -1798,5 +1797,59 @@ double approximate_curve_size(glm::vec4 points[4], int approx_precision){
         cur_point = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     } 
     return sumofdist;
+}
+
+Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[32]){
+    Bezier_path* atual = path;
+    while(atual->next_curve != NULL){
+        //incrementa "depth"
+        atual->curve_num++;
+        atual = atual->next_curve;
+    }
+    // faz a "oposicao" do penultimo ponto de uma e do segundo da outra em relacao ao que fica entre eles
+    glm::vec4 last_two_points_path[2] = {atual->cur_curve.points[2], atual->cur_curve.points[3]};
+    glm::vec4 first_point_curve = last_two_points_path[1] + (last_two_points_path[1] - last_two_points_path[0]);
+
+    Bezier_path* novo_path = (Bezier_path*)malloc(sizeof(Bezier_path));
+    glm::vec4 points[4] = {last_two_points_path[1], first_point_curve, curva[0], curva[1]};
+    Bezier_curve nova_curva = define_cubic_bezier(points);
+    novo_path->cur_curve = nova_curva;
+    novo_path->curve_num = 1;
+    novo_path->next_curve = NULL;
+    //incrementa "depth" do ultimo
+    atual->curve_num++;
+    atual->next_curve = novo_path;
+    return path;
+}
+
+void clear_curves(Bezier_path* path){
+    Bezier_path* cur_pos = path;
+    Bezier_path* next_pos = path->next_curve;
+    while(next_pos!=NULL){
+        free(cur_pos);
+        cur_pos = next_pos;
+        next_pos= cur_pos->next_curve;
+    }
+    free(cur_pos);
+}
+
+Bezier_path* create_path(Bezier_curve curva){
+    Bezier_path* novo_path = (Bezier_path*)malloc(sizeof(Bezier_path));
+    novo_path->cur_curve = curva;
+    novo_path->next_curve = NULL;
+    novo_path->curve_num = 1;
+    return novo_path;
+}
+
+glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif){
+    Bezier_path atual = *path;
+    int t_int = (int)floor(abs(*t));
+    while(t_int != (path->curve_num - atual.curve_num) && atual.next_curve != NULL)
+        atual = *atual.next_curve;
+    if(t_int != (path->curve_num - atual.curve_num))
+    //NULL INVERTE
+        *t = *t*-1;
+    return cubic_bezier_curve(atual.cur_curve, t, speedmult, timedif);
+
 }
 
