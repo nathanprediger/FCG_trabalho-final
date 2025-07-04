@@ -357,8 +357,8 @@ int main(int argc, char* argv[])
     ObjModel spheremodel("../../data/skyboxes/sphere.obj");
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
-
-    ObjModel leonmodel("../../data/leon/JD3L9JZFR7UB7NMGULPCJC51T.obj");
+    //Changed to leon with no weapon to test it
+    ObjModel leonmodel("../../data/leon/leonnoweapons.obj");
     ComputeNormals(&leonmodel);
     BuildTrianglesAndAddToVirtualScene(&leonmodel);
     std::map<std::string, GLuint> leon_textures = LoadTexturesFromObjModel(&leonmodel, "../../data/leon/");
@@ -394,6 +394,16 @@ int main(int argc, char* argv[])
     double bunnybrezt = 0;
     double timeprev = glfwGetTime();
     glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
+
+    //criamos caminho do coelhito
+    glm::vec4 brez_pos;
+    glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
+    glm::vec4 b_points2[2] = {glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
+    glm::vec4 b_points3[2] = {glm::vec4(26.0f, 0.0f, 15.0f, 1.0f), glm::vec4(30.0f, 0.0f, 19.0f, 1.0f)};
+    Bezier_curve curve1 = define_cubic_bezier(b_points1);
+    Bezier_path *coelhito_path = create_path(curve1);
+    coelhito_path = link_curve_to_path(coelhito_path, b_points2);
+    coelhito_path = link_curve_to_path(coelhito_path, b_points3);
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -545,16 +555,6 @@ int main(int argc, char* argv[])
         printf("%f\n", (bunnybrezt));
         
 
-        
-
-        glm::vec4 brez_pos;
-        glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
-        glm::vec4 b_points2[2] = {glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
-        glm::vec4 b_points3[2] = {glm::vec4(26.0f, 0.0f, 15.0f, 1.0f), glm::vec4(30.0f, 0.0f, 19.0f, 1.0f)};
-        Bezier_curve curve1 = define_cubic_bezier(b_points1);
-        Bezier_path *coelhito_path = create_path(curve1);
-        coelhito_path = link_curve_to_path(coelhito_path, b_points2);
-        coelhito_path = link_curve_to_path(coelhito_path, b_points3);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, earth_id);
@@ -1774,7 +1774,7 @@ glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, do
 Bezier_curve define_cubic_bezier(glm::vec4 points[4]){
     Bezier_curve ret;
     // aproxima tamanho para 100 pontos e retorna tamanho da curva aproximado para definir "velocidade"
-    ret.arcsize = approximate_curve_size(points, 100);
+    ret.arcsize = approximate_curve_size(points, 1000);
     // cria curva
     for(int i = 0;i < 4; i++)
         ret.points[i] = points[i];

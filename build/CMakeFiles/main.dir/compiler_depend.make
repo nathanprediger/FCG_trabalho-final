@@ -222,6 +222,7 @@ CMakeFiles/main.dir/src/glad.c.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_traba
 CMakeFiles/main.dir/src/main.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/main.cpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/GLFW/glfw3.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/KHR/khrplatform.h \
+  C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/collisions.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glad/glad.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/common.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/detail/_fixes.hpp \
@@ -2014,6 +2015,8 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/gtc/epsilon.hp
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/smmintrin.h:
 
+C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/collisions.h:
+
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/stddef.h:
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/syslimits.h:
@@ -2254,8 +2257,6 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/ext/vector_boo
 
 C:/msys64/ucrt64/include/c++/14.2.0/bits/stl_set.h:
 
-C:/msys64/ucrt64/include/c++/14.2.0/system_error:
-
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/ext/vector_bool3_precision.hpp:
 
 C:/msys64/ucrt64/include/c++/14.2.0/bits/vector.tcc:
@@ -2451,6 +2452,8 @@ C:/msys64/ucrt64/include/c++/14.2.0/stack:
 C:/msys64/ucrt64/include/c++/14.2.0/stdlib.h:
 
 C:/msys64/ucrt64/include/c++/14.2.0/streambuf:
+
+C:/msys64/ucrt64/include/c++/14.2.0/system_error:
 
 C:/msys64/ucrt64/include/c++/14.2.0/type_traits:
 
