@@ -166,6 +166,18 @@ void main()
 
         illumination_type = LAMBERT;
     }
+    else if(object_id == TREE){
+        Ka = material_Ka;
+        Ks = material_Ks;
+        q = material_q;
+        alfa = material_opacity;
+        U = texcoords.x;
+        V = texcoords.y;
+        illumination_type = BLINN_PHONG;
+        Kd0 = material_Kd * texture(TextureImage0, fract(vec2(U,V))).rgb;
+        float alpha = texture(TextureImage1, texcoords).r;
+        if (alpha < 0.5) discard;
+    }
     else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD || 
     object_id == GUN || object_id == TREE || object_id == HOUSE || object_id == FENCE) {
         Ka = material_Ka;
@@ -181,14 +193,18 @@ void main()
         if (u_has_texture == 1) {
             // Se tem textura, multiplica a cor do material pela cor da textura
             Kd0 = material_Kd * texture(TextureImage0, fract(vec2(U,V))).rgb;
-            if (object_id ==  TREE){
-                float alpha = texture(TextureImage1, texcoords).r;
-                if (alpha < 0.5) discard;
-            }
-        } else {
+        }
+        else if (u_has_texture == 2){
+            // Se tem textura, multiplica a cor do material pela cor da textura
+            Kd0 = material_Kd * texture(TextureImage0, fract(vec2(U,V))).rgb;
+            float alpha = texture(TextureImage1, texcoords).r;
+            if (alpha < 0.5) discard;
+        }
+        else {
             // Se NÃO tem textura, usa apenas a cor do material
             Kd0 = material_Kd;
         }
+        
     }
     // Obtemos a refletância difusa a partir da leitura da imagem TextureImage0
     if ( object_id == BUNNY )

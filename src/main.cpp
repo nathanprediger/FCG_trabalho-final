@@ -330,6 +330,7 @@ int main(int argc, char *argv[])
     GLuint rocky_terrain_id = LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1);   // TextureImage2
     GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
     GLuint tree_mask_id = LoadTextureImage("../../data/tree/A_5e6233bf8b6646988a1a6e8dc4697172_ped-tga.png", 0); // TextureImage4
+    GLuint fence_mask_id = LoadTextureImage("../../data/chainfence/modular_chainlink_fence_wire_alpha_1k.png", 0);
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -627,7 +628,8 @@ int main(int argc, char *argv[])
         DrawVirtualObjectMtl(housedraw, sizeof(housedraw), &housemodel, house_textures, HOUSE);
 
         char chaindraw[20] = {0};
-        chaindraw[13] = 1;
+        for(int i=0;i<20;i++)
+            chaindraw[i] = 1;
         glActiveTexture(GL_TEXTURE0);
         model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -778,6 +780,13 @@ std::map<std::string, GLuint> LoadTexturesFromObjModel(ObjModel *model, std::str
             GLuint loaded_texture_id = LoadTextureImage(texpath.c_str(), 1);
             texture_name_to_id[material.diffuse_texname] = loaded_texture_id;
         }
+        if(!material.alpha_texname.empty() && texture_name_to_id.count(material.alpha_texname) == 0)
+        {
+            std::string texpath = base_path + material.alpha_texname;
+
+            GLuint loaded_texture_id = LoadTextureImage(texpath.c_str(), 1);
+            texture_name_to_id[material.alpha_texname] = loaded_texture_id;
+        }
     }
 
     return texture_name_to_id;
@@ -825,17 +834,24 @@ void DrawVirtualObjectMtl(char obj_list[], int arrsize, ObjModel *model, std::ma
             if (material_id < 0)
                 continue;
             const auto &material = model->materials[material_id];
-
             // Ative a textura difusa do material, se existir
             if (!material.diffuse_texname.empty())
             {
+                glActiveTexture(GL_TEXTURE0);
                 // Diz ao shader que TEMOS uma textura para usar
                 glUniform1i(g_has_texture_uniform, 1);
 
                 GLuint texture_id = textures_name_to_id[material.diffuse_texname];
                 glBindTexture(GL_TEXTURE_2D, texture_id);
             }
-            else
+            if(!material.alpha_texname.empty()){
+                glUniform1i(g_has_texture_uniform, 2);
+                glActiveTexture(GL_TEXTURE1);
+
+                GLuint texture_id = textures_name_to_id[material.alpha_texname];
+                glBindTexture(GL_TEXTURE_2D, texture_id);
+            }
+            if(material.alpha_texname.empty() && material.diffuse_texname.empty())
             {
                 // Diz ao shader que NÃO TEMOS uma textura, então ele deve usar apenas a cor
                 glUniform1i(g_has_texture_uniform, 0);
