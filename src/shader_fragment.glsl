@@ -28,6 +28,7 @@ uniform mat4 projection;
 #define MALEZOMBIE 6
 #define FEMALEZOMBIE 7
 #define WOOD 8
+#define TREE 9
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -163,7 +164,7 @@ void main()
 
         illumination_type = LAMBERT;
     }
-    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD || object_id == GUN) {
+    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD || object_id == GUN || object_id == TREE) {
         Ka = material_Ka;
         Ks = material_Ks;
         q = material_q;

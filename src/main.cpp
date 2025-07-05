@@ -368,6 +368,11 @@ int main(int argc, char *argv[])
     BuildTrianglesAndAddToVirtualScene(&gunmodel);
     std::map<std::string, GLuint> gun_textures = LoadTexturesFromObjModel(&gunmodel, "../../data/GUN/");
 
+    ObjModel treemodel("../../data/tree/model.obj");
+    ComputeNormals(&treemodel);
+    BuildTrianglesAndAddToVirtualScene(&treemodel);
+    std::map<std::string, GLuint> tree_textures = LoadTexturesFromObjModel(&treemodel, "../../data/tree/");
+
     if (argc > 1)
     {
         ObjModel model(argv[1]);
@@ -537,15 +542,16 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
 
-#define SPHERE 0
-#define BUNNY 1
-#define PLANE 2
-#define WINE 3
-#define GUN 4
-#define LEON 5
-#define MALEZOMBIE 6
-#define FEMALEZOMBIE 7
-#define WOOD 8
+        #define SPHERE 0
+        #define BUNNY 1
+        #define PLANE 2
+        #define WINE 3
+        #define GUN 4
+        #define LEON 5
+        #define MALEZOMBIE 6
+        #define FEMALEZOMBIE 7
+        #define WOOD 8
+        #define TREE 9
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
@@ -587,9 +593,17 @@ int main(int argc, char *argv[])
         glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(0.0f, 1.0f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glDisable(GL_CULL_FACE); // <-- Desabilite o culling AQUI
+        glDisable(GL_CULL_FACE); 
         DrawVirtualObjectMtl(woodraw, sizeof(woodraw), &woodmodel, wood_textures, WOOD);
-        glEnable(GL_CULL_FACE); // <-- Habilite novamente para o resto da cena
+        glEnable(GL_CULL_FACE);
+
+        char treedraw[1] = {1};
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Translate(-5.0f, 0.0f, -5.0f) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);;
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glDisable(GL_CULL_FACE); 
+        DrawVirtualObjectMtl(treedraw, sizeof(treedraw), &treemodel, tree_textures, TREE);
+        glEnable(GL_CULL_FACE);
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
