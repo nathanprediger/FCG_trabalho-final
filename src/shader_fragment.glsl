@@ -174,10 +174,15 @@ void main()
         V = texcoords.y;
         illumination_type = BLINN_PHONG;
 
+        
         // Lógica condicional para a cor difusa
         if (u_has_texture == 1) {
             // Se tem textura, multiplica a cor do material pela cor da textura
             Kd0 = material_Kd * texture(TextureImage0, fract(vec2(U,V))).rgb;
+            if (object_id ==  TREE){
+                float alpha = texture(TextureImage1, texcoords).r;
+                if (alpha < 0.5) discard;
+            }
         } else {
             // Se NÃO tem textura, usa apenas a cor do material
             Kd0 = material_Kd;
