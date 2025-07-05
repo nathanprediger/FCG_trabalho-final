@@ -28,5 +28,17 @@
   "command": "C:\\msys64\\ucrt64\\bin\\gcc.exe  @CMakeFiles/main.dir/includes_C.rsp -g -o CMakeFiles\\main.dir\\src\\glad.c.obj -c C:\\Users\\dedes\\Desktop\\URGOPT2\\FGC\\FCG_trabalho-final\\src\\glad.c",
   "file": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/glad.c",
   "output": "CMakeFiles/main.dir/src/glad.c.obj"
+},
+{
+  "directory": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=c++11 -o CMakeFiles\\main.dir\\src\\enemies.cpp.obj -c C:\\Users\\dedes\\Desktop\\URGOPT2\\FGC\\FCG_trabalho-final\\src\\enemies.cpp",
+  "file": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/enemies.cpp",
+  "output": "CMakeFiles/main.dir/src/enemies.cpp.obj"
+},
+{
+  "directory": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=c++11 -o CMakeFiles\\main.dir\\src\\collisions.cpp.obj -c C:\\Users\\dedes\\Desktop\\URGOPT2\\FGC\\FCG_trabalho-final\\src\\collisions.cpp",
+  "file": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/collisions.cpp",
+  "output": "CMakeFiles/main.dir/src/collisions.cpp.obj"
 }
 ]

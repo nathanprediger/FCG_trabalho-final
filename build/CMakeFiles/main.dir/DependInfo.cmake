@@ -9,6 +9,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/glad.c" "CMakeFiles/main.dir/src/glad.c.obj" "gcc" "CMakeFiles/main.dir/src/glad.c.obj.d"
+  "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/collisions.cpp" "CMakeFiles/main.dir/src/collisions.cpp.obj" "gcc" "CMakeFiles/main.dir/src/collisions.cpp.obj.d"
+  "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/enemies.cpp" "CMakeFiles/main.dir/src/enemies.cpp.obj" "gcc" "CMakeFiles/main.dir/src/enemies.cpp.obj.d"
   "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/main.cpp" "CMakeFiles/main.dir/src/main.cpp.obj" "gcc" "CMakeFiles/main.dir/src/main.cpp.obj.d"
   "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/stb_image.cpp" "CMakeFiles/main.dir/src/stb_image.cpp.obj" "gcc" "CMakeFiles/main.dir/src/stb_image.cpp.obj.d"
   "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/textrendering.cpp" "CMakeFiles/main.dir/src/textrendering.cpp.obj" "gcc" "CMakeFiles/main.dir/src/textrendering.cpp.obj.d"

@@ -146,13 +146,45 @@ CMakeFiles/main.dir/src/glad.c.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/main.dir/src/glad.c.s"
 	C:\msys64\ucrt64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\glad.c -o CMakeFiles\main.dir\src\glad.c.s
 
+CMakeFiles/main.dir/src/enemies.cpp.obj: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/src/enemies.cpp.obj: CMakeFiles/main.dir/includes_CXX.rsp
+CMakeFiles/main.dir/src/enemies.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/enemies.cpp
+CMakeFiles/main.dir/src/enemies.cpp.obj: CMakeFiles/main.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/main.dir/src/enemies.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/src/enemies.cpp.obj -MF CMakeFiles\main.dir\src\enemies.cpp.obj.d -o CMakeFiles\main.dir\src\enemies.cpp.obj -c C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\enemies.cpp
+
+CMakeFiles/main.dir/src/enemies.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main.dir/src/enemies.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\enemies.cpp > CMakeFiles\main.dir\src\enemies.cpp.i
+
+CMakeFiles/main.dir/src/enemies.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/src/enemies.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\enemies.cpp -o CMakeFiles\main.dir\src\enemies.cpp.s
+
+CMakeFiles/main.dir/src/collisions.cpp.obj: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/src/collisions.cpp.obj: CMakeFiles/main.dir/includes_CXX.rsp
+CMakeFiles/main.dir/src/collisions.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/collisions.cpp
+CMakeFiles/main.dir/src/collisions.cpp.obj: CMakeFiles/main.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/main.dir/src/collisions.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/src/collisions.cpp.obj -MF CMakeFiles\main.dir\src\collisions.cpp.obj.d -o CMakeFiles\main.dir\src\collisions.cpp.obj -c C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\collisions.cpp
+
+CMakeFiles/main.dir/src/collisions.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main.dir/src/collisions.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\collisions.cpp > CMakeFiles\main.dir\src\collisions.cpp.i
+
+CMakeFiles/main.dir/src/collisions.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/src/collisions.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\collisions.cpp -o CMakeFiles\main.dir\src\collisions.cpp.s
+
 # Object files for target main
 main_OBJECTS = \
 "CMakeFiles/main.dir/src/main.cpp.obj" \
 "CMakeFiles/main.dir/src/textrendering.cpp.obj" \
 "CMakeFiles/main.dir/src/tiny_obj_loader.cpp.obj" \
 "CMakeFiles/main.dir/src/stb_image.cpp.obj" \
-"CMakeFiles/main.dir/src/glad.c.obj"
+"CMakeFiles/main.dir/src/glad.c.obj" \
+"CMakeFiles/main.dir/src/enemies.cpp.obj" \
+"CMakeFiles/main.dir/src/collisions.cpp.obj"
 
 # External object files for target main
 main_EXTERNAL_OBJECTS =
@@ -162,12 +194,14 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeF
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/tiny_obj_loader.cpp.obj
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/stb_image.cpp.obj
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/glad.c.obj
+C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/enemies.cpp.obj
+C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/collisions.cpp.obj
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/build.make
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/lib-ucrt-64/libglfw3.a
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/linkLibs.rsp
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/objects1.rsp
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\bin\Debug\main.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\bin\Debug\main.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\main.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

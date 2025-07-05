@@ -51,6 +51,7 @@
 #include "utils.h"
 #include "matrices.h"
 #include "collisions.h"
+#include "enemies.h"
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -404,6 +405,9 @@ int main(int argc, char* argv[])
     Bezier_path *coelhito_path = create_path(curve1);
     coelhito_path = link_curve_to_path(coelhito_path, b_points2);
     coelhito_path = link_curve_to_path(coelhito_path, b_points3);
+    struct Cube  ZFcube = Cube(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(-2.0f, -2.0f, -2.0f));
+    struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, ZFcube);
+
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -442,7 +446,7 @@ int main(int argc, char* argv[])
         printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
         glm::vec4 player_position = glm::vec4(0.0f+deslocar.x, 0.0f+deslocar.y, 0.0f+deslocar.z, 1.0f); // Posição do player
         glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde o player está virado
-        glm::vec4 speed = glm::vec4(5.0f*speedmultiplier, 5.0f*speedmultiplier, 5.0f*speedmultiplier, 0.0f);
+        glm::vec4 speed = glm::vec4(2.0f*speedmultiplier, 2.0f*speedmultiplier, 2.0f*speedmultiplier, 0.0f);
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         double timenow = glfwGetTime();
         if(first_person_view == false){
@@ -460,6 +464,7 @@ int main(int argc, char* argv[])
         view_frente.y = 0.0f; // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
         view_frente = view_frente/norm(view_frente); // Normalizamos o vetor "view_frente"
         glm::vec4 timenowvec = glm::vec4(timenow, timenow, timenow, 0.0f);
+        double timedif = timenowvec.x-timeprevec.x;
         if(!paused){
             if(w_press)
                 deslocar-= speed*view_frente*(timenowvec - timeprevec);
@@ -469,6 +474,9 @@ int main(int argc, char* argv[])
                 deslocar+= speed*view_frente*(timenowvec - timeprevec);
             if(d_press)
                 deslocar+=speed*view_lado*(timenowvec - timeprevec);
+            ZF.player_spot(player_position);
+            ZF.aggressive_direction(player_position);
+            ZF.move(timedif);
         }
         if(lastpaused != paused)
         {
@@ -484,7 +492,6 @@ int main(int argc, char* argv[])
             }
             lastpaused = paused;
         }
-        double timedif = timenowvec.x-timeprevec.x;
         timeprevec = timenowvec;
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
@@ -572,7 +579,7 @@ int main(int argc, char* argv[])
         char zomb[3] = {1,1,1};
         // FEMALE ZOMBIE
         glActiveTexture(GL_TEXTURE0);
-        model = Matrix_Translate(5.0f, 0.0f, 5.0f) * Matrix_Rotate_X(-M_PI / 2.0f);
+        model = Matrix_Translate(ZF.position.x, ZF.position.y, ZF.position.z) * Matrix_Rotate_X(-M_PI / 2.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
 

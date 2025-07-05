@@ -128,6 +128,54 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
+src/collisions.obj: src/collisions.cpp.obj
+.PHONY : src/collisions.obj
+
+# target to build an object file
+src/collisions.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/collisions.cpp.obj
+.PHONY : src/collisions.cpp.obj
+
+src/collisions.i: src/collisions.cpp.i
+.PHONY : src/collisions.i
+
+# target to preprocess a source file
+src/collisions.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/collisions.cpp.i
+.PHONY : src/collisions.cpp.i
+
+src/collisions.s: src/collisions.cpp.s
+.PHONY : src/collisions.s
+
+# target to generate assembly for a file
+src/collisions.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/collisions.cpp.s
+.PHONY : src/collisions.cpp.s
+
+src/enemies.obj: src/enemies.cpp.obj
+.PHONY : src/enemies.obj
+
+# target to build an object file
+src/enemies.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/enemies.cpp.obj
+.PHONY : src/enemies.cpp.obj
+
+src/enemies.i: src/enemies.cpp.i
+.PHONY : src/enemies.i
+
+# target to preprocess a source file
+src/enemies.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/enemies.cpp.i
+.PHONY : src/enemies.cpp.i
+
+src/enemies.s: src/enemies.cpp.s
+.PHONY : src/enemies.s
+
+# target to generate assembly for a file
+src/enemies.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/enemies.cpp.s
+.PHONY : src/enemies.cpp.s
+
 src/glad.obj: src/glad.c.obj
 .PHONY : src/glad.obj
 
@@ -257,6 +305,12 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... main
+	@echo ... src/collisions.obj
+	@echo ... src/collisions.i
+	@echo ... src/collisions.s
+	@echo ... src/enemies.obj
+	@echo ... src/enemies.i
+	@echo ... src/enemies.s
 	@echo ... src/glad.obj
 	@echo ... src/glad.i
 	@echo ... src/glad.s
