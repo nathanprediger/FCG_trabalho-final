@@ -372,6 +372,11 @@ int main(int argc, char* argv[])
     ComputeNormals(&femalezombiemodel);
     BuildTrianglesAndAddToVirtualScene(&femalezombiemodel);
     std::map<std::string, GLuint> femalezombie_textures = LoadTexturesFromObjModel(&femalezombiemodel, "../../data/femalezombie/");
+
+    ObjModel woodmodel("../../data/tronco/NL9JQ9SO03UR1QS6G2RU80S4N.obj");
+    ComputeNormals(&woodmodel);
+    BuildTrianglesAndAddToVirtualScene(&woodmodel);
+    std::map<std::string, GLuint> wood_textures = LoadTexturesFromObjModel(&woodmodel, "../../data/tronco/");
     if ( argc > 1 )
     {
         ObjModel model(argv[1]);
@@ -439,7 +444,7 @@ int main(int argc, char* argv[])
         glm::vec4 camera_position_c;
         glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
         // printa o vetor deslocar
-        printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
+        //printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
         glm::vec4 player_position = glm::vec4(0.0f+deslocar.x, 0.0f+deslocar.y, 0.0f+deslocar.z, 1.0f); // Posição do player
         glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde o player está virado
         glm::vec4 speed = glm::vec4(5.0f*speedmultiplier, 5.0f*speedmultiplier, 5.0f*speedmultiplier, 0.0f);
@@ -534,11 +539,12 @@ int main(int argc, char* argv[])
         #define LEON 5
         #define MALEZOMBIE 6
         #define FEMALEZOMBIE 7
+        #define WOOD 8
 
         if(first_person_view== false){    
             // LEON
             glActiveTexture(GL_TEXTURE0);
-            printf("Leon Position: %f %f %f\n", player_position.x, player_position.y, player_position.z);
+            //printf("Leon Position: %f %f %f\n", player_position.x, player_position.y, player_position.z);
             model = Matrix_Translate(player_position.x, player_position.y, player_position.z) * Matrix_Rotate_X(-M_PI / 2.0f);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             DrawVirtualObjectMtl("leon", &leonmodel, leon_textures, LEON);
@@ -580,6 +586,13 @@ int main(int argc, char* argv[])
         model = Matrix_Translate(2.5f, 0.0f, 2.5f) * Matrix_Rotate_X(-M_PI / 2.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl("malezombie", &malezombiemodel, malezombie_textures, MALEZOMBIE);
+
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Translate(0.0f, 1.0f, 0.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glDisable(GL_CULL_FACE); // <-- Desabilite o culling AQUI
+DrawVirtualObjectMtl("wood", &woodmodel, wood_textures, WOOD);
+glEnable(GL_CULL_FACE); // <-- Habilite novamente para o resto da cena
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -743,8 +756,8 @@ void DrawVirtualObjectMtl(const char *object_name, ObjModel *model, std::map<std
         {
             const auto &shape = model->shapes[i];
             int material_id = shape.mesh.material_ids.empty() ? -1 : shape.mesh.material_ids[0];
-            if (material_id < 0)
-                continue;
+            // if (material_id < 0)
+            //     continue;
             const auto &material = model->materials[material_id];
 
             // Ative a textura difusa do material, se existir
@@ -769,6 +782,8 @@ void DrawVirtualObjectMtl(const char *object_name, ObjModel *model, std::map<std
             glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_q"), material.shininess);
             glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_opacity"), material.dissolve);
 
+            printf("Shape: %s | Material: %s | Texture: %s",
+       shape.name.c_str(), material.name.c_str(), material.diffuse_texname.c_str());
             // Defina o object_id para LEON
             glUniform1i(g_object_id_uniform, obj_num);
 

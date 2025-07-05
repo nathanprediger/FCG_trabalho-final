@@ -26,6 +26,7 @@ uniform mat4 projection;
 #define LEON 5
 #define MALEZOMBIE 6
 #define FEMALEZOMBIE 7
+#define WOOD 8
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -161,7 +162,7 @@ void main()
 
         illumination_type = LAMBERT;
     }
-    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE) {
+    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD) {
         Ka = material_Ka;
         Ks = material_Ks;
         q = material_q;
@@ -186,7 +187,7 @@ void main()
     vec3 I = vec3(1.0, 1.0, 1.0); // PREENCH AQUI o espectro da fonte de luz
 
     // Espectro da luz ambiente
-    vec3 Ia = vec3(1.0, 1.0, 1.0); // PREENCHA AQUI o espectro da luz ambiente
+    vec3 Ia = vec3(0.2, 0.2, 0.2); // PREENCHA AQUI o espectro da luz ambiente
 
     // Equação de Iluminação
     vec3 lambert = I*max(0,dot(n,l));
@@ -199,10 +200,10 @@ void main()
 
     if(dot(w.xyz,(normalize(p-Lp)).xyz)>=cos(radians(30.0))){
         if(illumination_type == LAMBERT){
-        color.rgb = Kd0 * (lambert + vec3(0.01));
+        color.rgb = Kd0 * (lambert);
         }
         else if (illumination_type == BLINN_PHONG) {
-        color.rgb = Kd0 * (lambert + vec3(0.01)) + ambient_term + blinn_phong_specular_term;
+        color.rgb = Kd0 * (lambert) + ambient_term + blinn_phong_specular_term;
         }
     }
     else
