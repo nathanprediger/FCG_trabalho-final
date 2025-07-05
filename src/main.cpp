@@ -373,6 +373,11 @@ int main(int argc, char *argv[])
     BuildTrianglesAndAddToVirtualScene(&treemodel);
     std::map<std::string, GLuint> tree_textures = LoadTexturesFromObjModel(&treemodel, "../../data/tree/");
 
+    ObjModel housemodel("../../data/casa/V7NCMVM2CESW8Q4IP1OHYDUES.obj");
+    ComputeNormals(&housemodel);
+    BuildTrianglesAndAddToVirtualScene(&housemodel);
+    std::map<std::string, GLuint> house_textures = LoadTexturesFromObjModel(&housemodel, "../../data/casa/");
+
     if (argc > 1)
     {
         ObjModel model(argv[1]);
@@ -452,7 +457,7 @@ int main(int argc, char *argv[])
         double timenow = glfwGetTime();
         if (first_person_view == false)
         {
-            camera_position_c = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) + glm::vec4(x, y, z, 0.0f) - 2.0f * player_view_vector;
+            camera_position_c = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - player_view_vector;
             if (camera_position_c.y <= 0.05f)
                 camera_position_c.y = 0.05f;
             camera_view_vector = normalize(player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c);
@@ -552,6 +557,7 @@ int main(int argc, char *argv[])
         #define FEMALEZOMBIE 7
         #define WOOD 8
         #define TREE 9
+        #define HOUSE 10
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
@@ -604,6 +610,13 @@ int main(int argc, char *argv[])
         glDisable(GL_CULL_FACE); 
         DrawVirtualObjectMtl(treedraw, sizeof(treedraw), &treemodel, tree_textures, TREE);
         glEnable(GL_CULL_FACE);
+
+        char housedraw[3] = {1,1,1};
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        DrawVirtualObjectMtl(housedraw, sizeof(housedraw), &housemodel, house_textures, HOUSE);
+
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -746,7 +759,7 @@ std::map<std::string, GLuint> LoadTexturesFromObjModel(ObjModel *model, std::str
         {
             std::string texpath = base_path + material.diffuse_texname;
 
-            GLuint loaded_texture_id = LoadTextureImage(texpath.c_str(), 0);
+            GLuint loaded_texture_id = LoadTextureImage(texpath.c_str(), 1);
             texture_name_to_id[material.diffuse_texname] = loaded_texture_id;
         }
     }

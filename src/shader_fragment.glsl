@@ -29,6 +29,7 @@ uniform mat4 projection;
 #define FEMALEZOMBIE 7
 #define WOOD 8
 #define TREE 9
+#define HOUSE 10
 uniform int object_id;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
@@ -164,7 +165,7 @@ void main()
 
         illumination_type = LAMBERT;
     }
-    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD || object_id == GUN || object_id == TREE) {
+    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD || object_id == GUN || object_id == TREE || object_id == HOUSE) {
         Ka = material_Ka;
         Ks = material_Ks;
         q = material_q;
@@ -176,7 +177,7 @@ void main()
         // Lógica condicional para a cor difusa
         if (u_has_texture == 1) {
             // Se tem textura, multiplica a cor do material pela cor da textura
-            Kd0 = material_Kd * texture(TextureImage0, vec2(U,V)).rgb;
+            Kd0 = material_Kd * texture(TextureImage0, fract(vec2(U,V))).rgb;
         } else {
             // Se NÃO tem textura, usa apenas a cor do material
             Kd0 = material_Kd;
@@ -200,16 +201,16 @@ void main()
     // Termo especular utilizando o modelo de iluminação de Blinn-Phong
     vec3 blinn_phong_specular_term  = Ks*I*pow(dot(n.xyz,h.xyz),q);
 
-    if(dot(w.xyz,(normalize(p-Lp)).xyz)>=cos(radians(30.0))){
+   // if(dot(w.xyz,(normalize(p-Lp)).xyz)>=cos(radians(30.0))){
         if(illumination_type == LAMBERT){
         color.rgb = Kd0 * (lambert);
         }
         else if (illumination_type == BLINN_PHONG) {
         color.rgb = Kd0 * (lambert) + ambient_term + blinn_phong_specular_term;
         }
-    }
-    else
-        color.rgb = Kd0 * (lambert + vec3(0.005)) + ambient_term;
+    //}
+    //else
+    //    color.rgb = Kd0 * (lambert + vec3(0.005)) + ambient_term;
     
 
     // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
