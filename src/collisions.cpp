@@ -10,11 +10,11 @@ bool Sphere::colideWithPoint(const glm::vec3 &ponto) const
 }
 
 Cube::Cube(const glm::vec3 &m, const glm::vec3 &n) : max(m), min(n) {}
-bool Cube::colideWithCube(const Cube &other) const
+bool Cube::colideWithCube(const Cube &other, glm::vec4 pos_1, glm::vec4 pos_2) const
 {
-    return (max.x >= other.min.x && min.x <= other.max.x) &&
-           (max.y >= other.min.y && min.y <= other.max.y) &&
-           (max.z >= other.min.z && min.z <= other.max.z);
+    return (max.x + pos_1.x >= other.min.x + pos_2.x && min.x + pos_1.x <= other.max.x + pos_2.x) &&
+           (max.y + pos_1.y>= other.min.y + pos_2.y && min.y + pos_1.y <= other.max.y + pos_2.y) &&
+           (max.z + pos_1.z >= other.min.z + pos_2.z && min.z + pos_1.z <= other.max.z + pos_2.z);
 }
 bool Cube::colideWithPlane(const Plane &Plane)
 {

@@ -176,6 +176,36 @@ CMakeFiles/main.dir/src/collisions.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/src/collisions.cpp.s"
 	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\collisions.cpp -o CMakeFiles\main.dir\src\collisions.cpp.s
 
+CMakeFiles/main.dir/src/bezier.cpp.obj: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/src/bezier.cpp.obj: CMakeFiles/main.dir/includes_CXX.rsp
+CMakeFiles/main.dir/src/bezier.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/bezier.cpp
+CMakeFiles/main.dir/src/bezier.cpp.obj: CMakeFiles/main.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/main.dir/src/bezier.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/src/bezier.cpp.obj -MF CMakeFiles\main.dir\src\bezier.cpp.obj.d -o CMakeFiles\main.dir\src\bezier.cpp.obj -c C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\bezier.cpp
+
+CMakeFiles/main.dir/src/bezier.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main.dir/src/bezier.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\bezier.cpp > CMakeFiles\main.dir\src\bezier.cpp.i
+
+CMakeFiles/main.dir/src/bezier.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/src/bezier.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\bezier.cpp -o CMakeFiles\main.dir\src\bezier.cpp.s
+
+CMakeFiles/main.dir/src/matrices.cpp.obj: CMakeFiles/main.dir/flags.make
+CMakeFiles/main.dir/src/matrices.cpp.obj: CMakeFiles/main.dir/includes_CXX.rsp
+CMakeFiles/main.dir/src/matrices.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/matrices.cpp
+CMakeFiles/main.dir/src/matrices.cpp.obj: CMakeFiles/main.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/main.dir/src/matrices.cpp.obj"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/main.dir/src/matrices.cpp.obj -MF CMakeFiles\main.dir\src\matrices.cpp.obj.d -o CMakeFiles\main.dir\src\matrices.cpp.obj -c C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\matrices.cpp
+
+CMakeFiles/main.dir/src/matrices.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main.dir/src/matrices.cpp.i"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\matrices.cpp > CMakeFiles\main.dir\src\matrices.cpp.i
+
+CMakeFiles/main.dir/src/matrices.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main.dir/src/matrices.cpp.s"
+	C:\msys64\ucrt64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\src\matrices.cpp -o CMakeFiles\main.dir\src\matrices.cpp.s
+
 # Object files for target main
 main_OBJECTS = \
 "CMakeFiles/main.dir/src/main.cpp.obj" \
@@ -184,7 +214,9 @@ main_OBJECTS = \
 "CMakeFiles/main.dir/src/stb_image.cpp.obj" \
 "CMakeFiles/main.dir/src/glad.c.obj" \
 "CMakeFiles/main.dir/src/enemies.cpp.obj" \
-"CMakeFiles/main.dir/src/collisions.cpp.obj"
+"CMakeFiles/main.dir/src/collisions.cpp.obj" \
+"CMakeFiles/main.dir/src/bezier.cpp.obj" \
+"CMakeFiles/main.dir/src/matrices.cpp.obj"
 
 # External object files for target main
 main_EXTERNAL_OBJECTS =
@@ -196,12 +228,14 @@ C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeF
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/glad.c.obj
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/enemies.cpp.obj
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/collisions.cpp.obj
+C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/bezier.cpp.obj
+C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/src/matrices.cpp.obj
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/build.make
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/lib-ucrt-64/libglfw3.a
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/linkLibs.rsp
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/objects1.rsp
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/bin/Debug/main.exe: CMakeFiles/main.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\bin\Debug\main.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX executable C:\Users\dedes\Desktop\URGOPT2\FGC\FCG_trabalho-final\bin\Debug\main.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\main.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

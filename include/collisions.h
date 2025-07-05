@@ -32,6 +32,6 @@ struct Cube {
 
     Cube(const glm::vec3& m, const glm::vec3& n);
 
-    bool colideWithCube(const Cube& other) const;
+    bool colideWithCube(const Cube &other, glm::vec4 pos_1, glm::vec4 pos_2) const;
     bool colideWithPlane(const Plane& plane);
 };

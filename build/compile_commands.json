@@ -40,5 +40,17 @@
   "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=c++11 -o CMakeFiles\\main.dir\\src\\collisions.cpp.obj -c C:\\Users\\dedes\\Desktop\\URGOPT2\\FGC\\FCG_trabalho-final\\src\\collisions.cpp",
   "file": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/collisions.cpp",
   "output": "CMakeFiles/main.dir/src/collisions.cpp.obj"
+},
+{
+  "directory": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=c++11 -o CMakeFiles\\main.dir\\src\\bezier.cpp.obj -c C:\\Users\\dedes\\Desktop\\URGOPT2\\FGC\\FCG_trabalho-final\\src\\bezier.cpp",
+  "file": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/bezier.cpp",
+  "output": "CMakeFiles/main.dir/src/bezier.cpp.obj"
+},
+{
+  "directory": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe  @CMakeFiles/main.dir/includes_CXX.rsp -g -std=c++11 -o CMakeFiles\\main.dir\\src\\matrices.cpp.obj -c C:\\Users\\dedes\\Desktop\\URGOPT2\\FGC\\FCG_trabalho-final\\src\\matrices.cpp",
+  "file": "C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/matrices.cpp",
+  "output": "CMakeFiles/main.dir/src/matrices.cpp.obj"
 }
 ]

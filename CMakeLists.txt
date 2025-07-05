@@ -13,6 +13,8 @@ set(SOURCES
   src/glad.c
   src/enemies.cpp
   src/collisions.cpp
+  src/bezier.cpp
+  src/matrices.cpp
 )
 
 cmake_minimum_required(VERSION 3.5.0)

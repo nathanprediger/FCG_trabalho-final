@@ -52,6 +52,9 @@
 #include "matrices.h"
 #include "collisions.h"
 #include "enemies.h"
+#include "bezier.h"
+
+#define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.5f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -171,25 +174,9 @@ struct SceneObject
     glm::vec3    bbox_max;
 };
 
-typedef struct bezier_curve_pair{
-    glm::vec4 points[4]; // pontos da curva
-    double arcsize; // para ter aproximadamente uma velocidade constante ao longo da curva
-} Bezier_curve;
-
-typedef struct bez_path{
-    Bezier_curve cur_curve; // curva atual
-    struct bez_path* next_curve; // proxima curva
-    int curve_num; // quantas curvas faltam ate o fim, contando atual
-}Bezier_path;
 
 //Novas Funcoes
-glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, double timedif);
-double approximate_curve_size(glm::vec4 points[4], int approx_precision);
-Bezier_curve define_cubic_bezier(glm::vec4 points[4]);
-Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]);
-Bezier_path* create_path(Bezier_curve curva);
-void clear_path(Bezier_path* path);
-glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif);
+double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point);
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
 
 // A cena virtual é uma lista de objetos nomeados, guardados em um dicionário
@@ -262,6 +249,8 @@ bool mouse_move = false;
 bool paused = false;
 bool first_person_view = true;
 float speedmultiplier = 1.0f;
+float playerspeed = 2.0f;
+
 #define NUM_ENEMIES 15
 
 
@@ -402,16 +391,19 @@ int main(int argc, char* argv[])
     glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
 
     //criamos caminho do coelhito
-    glm::vec4 brez_pos;
+    glm::vec4 brez_pos = glm::vec4(5.0f,0.0f, 5.0f, 1.0f);
+    glm::vec4 prev_brez_pos = glm::vec4(5.0f,0.0f, 5.0f, 1.0f);
+    double ang = 1;
     glm::vec4 b_points1[4] = {glm::vec4(5.0f,0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f,0.0f,8.0f, 1.0f), glm::vec4(10.0f, 0.0f,5.0f,1.0f)};
     glm::vec4 b_points2[2] = {glm::vec4(15.0f,0.0f, 2.0f,1.0f), glm::vec4(18.0f,0.0f,6.0f,1.0f)};
     glm::vec4 b_points3[2] = {glm::vec4(26.0f, 0.0f, 15.0f, 1.0f), glm::vec4(30.0f, 0.0f, 19.0f, 1.0f)};
+    glm::vec4 b_points4[2] = {glm::vec4(-5.0f,0.0f, -5.0f, 1.0f), glm::vec4(-6.0f, 0.0f, -8.0f, 1.0f)};
     Bezier_curve curve1 = define_cubic_bezier(b_points1);
     Bezier_path *coelhito_path = create_path(curve1);
     coelhito_path = link_curve_to_path(coelhito_path, b_points2);
     coelhito_path = link_curve_to_path(coelhito_path, b_points3);
-    struct Cube  ZFcube = Cube(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(-2.0f, -2.0f, -2.0f));
-    struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, ZFcube);
+    coelhito_path = link_curve_to_path(coelhito_path, b_points4);
+    struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, HUMANOIDBOX);
 
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
@@ -451,17 +443,16 @@ int main(int argc, char* argv[])
         //printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
         glm::vec4 player_position = glm::vec4(0.0f+deslocar.x, 0.0f+deslocar.y, 0.0f+deslocar.z, 1.0f); // Posição do player
         glm::vec4 player_view_vector = glm::vec4(x,-y,z,0.0f);  // Vetor "view", sentido para onde o player está virado
-        glm::vec4 speed = glm::vec4(2.0f*speedmultiplier, 2.0f*speedmultiplier, 2.0f*speedmultiplier, 0.0f);
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         double timenow = glfwGetTime();
         if(first_person_view == false){
-            camera_position_c = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) + glm::vec4(x,y,z,0.0f);
+            camera_position_c = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) + glm::vec4(x,y,z, 0.0f) - 2.0f*player_view_vector;
             if(camera_position_c.y <= 0.05f)
                 camera_position_c.y = 0.05f;
-            camera_view_vector = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c;
+            camera_view_vector = normalize(player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c);
         }
         else{
-            camera_position_c = player_position+ glm::vec4(0.0f, 1.5f, 0.0f, 0.0f); // Posição da câmera em primeira pessoa
+            camera_position_c = player_position+ glm::vec4(0.0f, 2.0f, 0.0f, 0.0f); // Posição da câmera em primeira pessoa
             camera_view_vector = player_view_vector;
         }
         glm::vec4 view_frente = -camera_view_vector/norm(camera_view_vector);
@@ -472,16 +463,20 @@ int main(int argc, char* argv[])
         double timedif = timenowvec.x-timeprevec.x;
         if(!paused){
             if(w_press)
-                deslocar-= speed*view_frente*(timenowvec - timeprevec);
+                deslocar-= playerspeed*speedmultiplier*view_frente*(timenowvec - timeprevec);
             if(a_press)
-                deslocar-=speed*view_lado*(timenowvec - timeprevec);
+                deslocar-= playerspeed*speedmultiplier*view_lado*(timenowvec - timeprevec);
             if(s_press)
-                deslocar+= speed*view_frente*(timenowvec - timeprevec);
+                deslocar+= playerspeed*speedmultiplier*view_frente*(timenowvec - timeprevec);
             if(d_press)
-                deslocar+=speed*view_lado*(timenowvec - timeprevec);
+                deslocar+= playerspeed*speedmultiplier*view_lado*(timenowvec - timeprevec);
             ZF.player_spot(player_position);
             ZF.aggressive_direction(player_position);
             ZF.move(timedif);
+            if(ZF.boundingBox.colideWithCube(HUMANOIDBOX, ZF.position, player_position)){
+                printf("AIAIAIAIAIAI ME MORDEU\n");
+                glfwSetWindowShouldClose(window, GL_TRUE);
+            }
         }
         if(lastpaused != paused)
         {
@@ -548,12 +543,13 @@ int main(int argc, char* argv[])
         #define FEMALEZOMBIE 7
         #define WOOD 8
 
+
         if(first_person_view== false){    
             // LEON
             // Arma, faca, resto do corpo, ultimo = oculos
             glActiveTexture(GL_TEXTURE0);
             //printf("Leon Position: %f %f %f\n", player_position.x, player_position.y, player_position.z);
-            model = Matrix_Translate(player_position.x, player_position.y, player_position.z) * Matrix_Rotate_X(-M_PI / 2.0f);
+            model = Matrix_Translate(player_position.x, player_position.y, player_position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(g_CameraTheta);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             char leon_mask[8] = {0, 0, 1, 1, 1, 1, 1, 1};
             DrawVirtualObjectMtl(leon_mask, sizeof(leon_mask), &leonmodel, leon_textures, LEON);
@@ -570,22 +566,23 @@ int main(int argc, char* argv[])
         //printf("%f\n", (bunnybrezt));
         
 
-        
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, earth_id);
-        double b_speed = 5.0f;
-        if(!paused)
+        double b_speed = 6.0f;
+        if(!paused){
             brez_pos = move_along_bezier_path(coelhito_path, &bunnybrezt, b_speed, timedif);
-        model = Matrix_Translate(brez_pos.x, 1.0f, brez_pos.z);
+            ang = direction_angle(prev_brez_pos, brez_pos);
+            prev_brez_pos = brez_pos;
+        }
+        model = Matrix_Translate(brez_pos.x, 0.3f, brez_pos.z)*Matrix_Scale(0.3f,0.3f,0.3f)*Matrix_Rotate_Y(ang + M_PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
-        
         char zomb[3] = {1,1,1};
         // FEMALE ZOMBIE
         glActiveTexture(GL_TEXTURE0);
-        model = Matrix_Translate(ZF.position.x, ZF.position.y, ZF.position.z) * Matrix_Rotate_X(-M_PI / 2.0f);
+        model = Matrix_Translate(ZF.position.x, ZF.position.y, ZF.position.z) * Matrix_Rotate_X(-M_PI / 2.0f)*Matrix_Rotate_Z(atan2(ZF.direction.x, ZF.direction.z));
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
 
@@ -595,7 +592,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(zomb, sizeof(zomb), &malezombiemodel, malezombie_textures, MALEZOMBIE);
 
-        char woodraw[3] = {1,1,1};
+        char woodraw[1] = {1};
         glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(0.0f, 1.0f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -784,7 +781,6 @@ void DrawVirtualObjectMtl(char obj_list[], int arrsize, ObjModel *model, std::ma
                     // Diz ao shader que NÃO TEMOS uma textura, então ele deve usar apenas a cor
                     glUniform1i(g_has_texture_uniform, 0);
                 }
-
                 // Envie parâmetros do material para o shader
                 glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ka"), 1, material.ambient);
                 glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Kd"), 1, material.diffuse);
@@ -1404,7 +1400,7 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
     // definição do sistema de coordenadas da câmera. Isto é, a variável abaixo
     // nunca pode ser zero. Versões anteriores deste código possuíam este bug,
     // o qual foi detectado pelo aluno Vinicius Fraga (2017/2).
-    const float verysmallnumber = std::numeric_limits<float>::epsilon();
+    const float verysmallnumber = 0.5;
     if (g_CameraDistance < verysmallnumber)
         g_CameraDistance = verysmallnumber;
 }
@@ -1778,121 +1774,12 @@ void PrintObjModelInfo(ObjModel* model)
   }
 }
 
-glm::vec4 cubic_bezier_curve(Bezier_curve bez_c, double *t, double speedmult, double timedif){
-    glm::vec4 pos = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    // definição dos coeficientes de bezier
-    double tval = abs(*t) - floor(abs(*t)); // caso t > 1 ou < 0, deixamos t em um periodo [0,1]
-    double tcube = pow(tval,3);
-    double tsquare = pow(tval,2);
-    double negtcube = pow(1-tval, 3);
-    double negtsquare = pow(1-tval, 2);
-    double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tcube};
-    //calculamos posicao
-    for(int i = 0; i < 4; i++)
-        pos += bez_c.points[i] * (float)coefs[i];
-    // atualizamos t de acordo com a velocidade definida pelo usuario, comprimento aproximado do arco, e tempo passado entre ultima "mexida"
-    *t += (timedif*speedmult)/bez_c.arcsize;
-    return pos;
-}
 
-Bezier_curve define_cubic_bezier(glm::vec4 points[4]){
-    Bezier_curve ret;
-    // aproxima tamanho para 100 pontos e retorna tamanho da curva aproximado para definir "velocidade"
-    ret.arcsize = approximate_curve_size(points, 1000);
-    // cria curva
-    for(int i = 0;i < 4; i++)
-        ret.points[i] = points[i];
-    return ret;
-}
-
-double approximate_curve_size(glm::vec4 points[4], int approx_precision){
-    double tval, tcube, tsquare, negtcube, negtsquare;
-    double sumofdist = 0;
-    glm::vec4 prev_point = points[0];
-    glm::vec4 cur_point = glm::vec4(0.0f,0.0f,0.0f,1.0f);
-    for (int i = 1; i < approx_precision; i++){
-        // simula um calculo de bezier, pegando pontos com intervalos de "progresso" constantes
-        // i/quantidade de pontos, i iterando de 1 ate a quantidade de pontos
-        tval = (double)i/approx_precision;
-        tcube = pow(tval,3);
-        tsquare = pow(tval,2);
-        negtcube = pow(1-tval, 3);
-        negtsquare = pow(1-tval, 2);
-        double coefs[4] = {negtcube, 3*negtsquare*tval, 3*tsquare*(1-tval), tcube};
-        for(int j = 0; j < 4; j++)
-            cur_point += points[j] * (float)coefs[j];
-        // calculado o ponto, fazemos a distancia dele e seu ponto anterior, ressaltando que o primeiro ponto da curva ja é dado;
-        sumofdist += abs(norm(cur_point - prev_point));
-        // atualizamos ponto anterior como o ponto atual para iterar pelo loop inteiro
-        prev_point = cur_point;
-        cur_point = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point){
+    glm::vec3 dir_vec = normalize(cur_point - prev_point);
+    double angle = dot(dir_vec, glm::vec3(0.0f,0.0f,1.0f));
+    if (glm::length(dir_vec) == 0.0f) {
+        return 0.0f;
     }
-    // ultimo ponto é dado na entrada da funcao, por isso calculamos os pontos [1, x - 1], x sendo quantidade de ponts;
-    sumofdist += abs(norm(points[3] - prev_point));
-    return sumofdist;
+    return atan2(dir_vec.x, dir_vec.z);
 }
-
-Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]){
-    Bezier_path* atual = path;
-    while(atual->next_curve != NULL){
-        //incrementa "depth"
-        atual->curve_num++;
-        atual = atual->next_curve;
-    }
-    // faz a "oposicao" do penultimo ponto de uma e do segundo da outra em relacao ao que fica entre eles
-    glm::vec4 last_two_points_path[2] = {atual->cur_curve.points[2], atual->cur_curve.points[3]};
-    glm::vec4 first_point_curve = last_two_points_path[1] + (last_two_points_path[1] - last_two_points_path[0]);
-
-    Bezier_path* novo_path = (Bezier_path*)malloc(sizeof(Bezier_path));
-    glm::vec4 points[4] = {last_two_points_path[1], first_point_curve, curva[0], curva[1]};
-    Bezier_curve nova_curva = define_cubic_bezier(points);
-    novo_path->cur_curve = nova_curva;
-    novo_path->curve_num = 1;
-    novo_path->next_curve = NULL;
-    //incrementa "depth" do ultimo
-    atual->curve_num++;
-    atual->next_curve = novo_path;
-    return path;
-}
-
-// não utilizado ainda, mas da free na memoria do path
-void clear_path(Bezier_path* path){
-    // liberamos sempre a curva atual, mantendo a proxima em memoria para nao perder o caminho dos nodos
-    Bezier_path* cur_pos = path;
-    Bezier_path* next_pos = path->next_curve;
-    while(next_pos!=NULL){
-        free(cur_pos);
-        cur_pos = next_pos;
-        next_pos= cur_pos->next_curve;
-    }
-    // quando next_pos == NULL, quer dizer que a curva atual é a ultima, assim damos free nela
-    free(cur_pos);
-}
-
-//criamos um path a partir de uma curva, caso temos uma curva só, pode-se evitar essa funcao
-// em prol de calcular a curva de bezier direto na struct da curva
-// POSSIVEL ATUALIZAÇÃO, DAR "TEMPO" PARA PATH, ASSIM QUANDO CALCULAR BEZIER PATH PODERIAMOS UTILIZAR O T DE CADA UMA DAS CURVAS ISOLADO.
-// OTIMA IDEIA NA REAL DEPOIS IMPLEMENTO
-Bezier_path* create_path(Bezier_curve curva){
-    Bezier_path* novo_path = (Bezier_path*)malloc(sizeof(Bezier_path));
-    novo_path->cur_curve = curva;
-    novo_path->next_curve = NULL;
-    novo_path->curve_num = 1; // ultimo nodo do path, depois sera incrementado
-    return novo_path;
-}
-
-//FUNCAO PARA ANDAR DE FATO AO LONGO DO CAMINHO DEFINIDO PELAS CURVAS.
-glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif){
-    Bezier_path atual = *path; // DEFINIMOS CURVA ATUAL
-    int t_int = (int)floor(abs(*t)); //T_INT É USADO PARA ACHAR QUAL CURVA DEVEMOS MEXER,
-    // PODE SER TROCADO DEPOIS PARA REFLETIR MUDANÇAS PROPOSTAS NOS COMENTARIOS ACIMA
-    while(t_int != (path->curve_num - atual.curve_num) && atual.next_curve != NULL)
-        atual = *atual.next_curve; //Percorremos a lista de curvas até chegarmos ou na ultima curva ou na correspondente ao t atual
-    if(t_int != (path->curve_num - atual.curve_num)) // caso estejamos na ultima curva mas t indica que deveriamos estar na proxima (não existe)
-    //NULL INVERTE t para -t_int, assim já que utilizamos abs na funcao cubic_bezier_curve, iremos, por exemplo, de 1.01
-    // que esta fora do range [0, 1] para -0.999, que apos o abs fica 0.999 então dentro do range [0, 1], agora o incremento em t faz o caminho de retorno
-        *t = (t_int - 0.001)*-1;
-    return cubic_bezier_curve(atual.cur_curve, t, speedmult, timedif);
-
-}
-

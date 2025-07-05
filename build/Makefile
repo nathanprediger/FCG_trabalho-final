@@ -128,6 +128,30 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
+src/bezier.obj: src/bezier.cpp.obj
+.PHONY : src/bezier.obj
+
+# target to build an object file
+src/bezier.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/bezier.cpp.obj
+.PHONY : src/bezier.cpp.obj
+
+src/bezier.i: src/bezier.cpp.i
+.PHONY : src/bezier.i
+
+# target to preprocess a source file
+src/bezier.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/bezier.cpp.i
+.PHONY : src/bezier.cpp.i
+
+src/bezier.s: src/bezier.cpp.s
+.PHONY : src/bezier.s
+
+# target to generate assembly for a file
+src/bezier.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/bezier.cpp.s
+.PHONY : src/bezier.cpp.s
+
 src/collisions.obj: src/collisions.cpp.obj
 .PHONY : src/collisions.obj
 
@@ -224,6 +248,30 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/matrices.obj: src/matrices.cpp.obj
+.PHONY : src/matrices.obj
+
+# target to build an object file
+src/matrices.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/matrices.cpp.obj
+.PHONY : src/matrices.cpp.obj
+
+src/matrices.i: src/matrices.cpp.i
+.PHONY : src/matrices.i
+
+# target to preprocess a source file
+src/matrices.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/matrices.cpp.i
+.PHONY : src/matrices.cpp.i
+
+src/matrices.s: src/matrices.cpp.s
+.PHONY : src/matrices.s
+
+# target to generate assembly for a file
+src/matrices.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/matrices.cpp.s
+.PHONY : src/matrices.cpp.s
+
 src/stb_image.obj: src/stb_image.cpp.obj
 .PHONY : src/stb_image.obj
 
@@ -305,6 +353,9 @@ help:
 	@echo ... edit_cache
 	@echo ... rebuild_cache
 	@echo ... main
+	@echo ... src/bezier.obj
+	@echo ... src/bezier.i
+	@echo ... src/bezier.s
 	@echo ... src/collisions.obj
 	@echo ... src/collisions.i
 	@echo ... src/collisions.s
@@ -317,6 +368,9 @@ help:
 	@echo ... src/main.obj
 	@echo ... src/main.i
 	@echo ... src/main.s
+	@echo ... src/matrices.obj
+	@echo ... src/matrices.i
+	@echo ... src/matrices.s
 	@echo ... src/stb_image.obj
 	@echo ... src/stb_image.i
 	@echo ... src/stb_image.s
