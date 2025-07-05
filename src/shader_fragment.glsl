@@ -23,6 +23,7 @@ uniform mat4 projection;
 #define BUNNY  1
 #define PLANE  2
 #define WINE 3
+#define GUN 4
 #define LEON 5
 #define MALEZOMBIE 6
 #define FEMALEZOMBIE 7
@@ -162,7 +163,7 @@ void main()
 
         illumination_type = LAMBERT;
     }
-    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD) {
+    else if (object_id == LEON || object_id == MALEZOMBIE || object_id == FEMALEZOMBIE || object_id == WOOD || object_id == GUN) {
         Ka = material_Ka;
         Ks = material_Ks;
         q = material_q;
