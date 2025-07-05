@@ -1,0 +1,26 @@
+# Blender 4.4.3 MTL File: 'modular_chainlink_fence_1k.blend'
+# www.blender.org
+
+newmtl modular_chainlink_fence_posts
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Kd modular_chainlink_fence_posts_diff_1k.png
+map_Ns modular_chainlink_fence_posts_rough_1k.png
+map_refl modular_chainlink_fence_posts_metal_1k.png
+map_Bump -bm 1.000000 modular_chainlink_fence_posts_nor_gl_1k.png
+
+newmtl modular_chainlink_fence_wire
+Ka 1.000000 1.000000 1.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+illum 2
+map_Kd modular_chainlink_fence_wire_diff_1k.png
+map_Ns modular_chainlink_fence_wire_rough_1k.png
+map_refl modular_chainlink_fence_wire_metal_1k.png
+map_d modular_chainlink_fence_wire_alpha_1k.png
+map_Bump -bm 1.000000 modular_chainlink_fence_wire_nor_gl_1k.png

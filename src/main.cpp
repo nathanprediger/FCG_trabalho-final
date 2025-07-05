@@ -363,6 +363,11 @@ int main(int argc, char *argv[])
     BuildTrianglesAndAddToVirtualScene(&woodmodel);
     std::map<std::string, GLuint> wood_textures = LoadTexturesFromObjModel(&woodmodel, "../../data/tronco/");
 
+    ObjModel chainfencemodel("../../data/chainfence/modular_chainlink_fence_4k.obj");
+    ComputeNormals(&chainfencemodel);
+    BuildTrianglesAndAddToVirtualScene(&chainfencemodel);
+    std::map<std::string, GLuint> chainfence_textures = LoadTexturesFromObjModel(&chainfencemodel, "../../data/chainfence/");
+
     ObjModel gunmodel("../../data/GUN/VOUQ5MT40MFG4TEJ3DSCA3A7K.obj");
     ComputeNormals(&gunmodel);
     BuildTrianglesAndAddToVirtualScene(&gunmodel);
@@ -558,6 +563,7 @@ int main(int argc, char *argv[])
         #define WOOD 8
         #define TREE 9
         #define HOUSE 10
+        #define FENCE 11
 
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
@@ -616,6 +622,13 @@ int main(int argc, char *argv[])
         model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(housedraw, sizeof(housedraw), &housemodel, house_textures, HOUSE);
+
+        char chaindraw[20] = {0};
+        chaindraw[13] = 1;
+        glActiveTexture(GL_TEXTURE0);
+        model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);        
 
 
         glUseProgram(g_GpuProgramSkyboxID);
