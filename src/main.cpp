@@ -121,7 +121,7 @@ void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, cria
 GLuint LoadTextureImage(const char* filename, int type); // Função que carrega imagens de textura
 std::map<std::string, GLuint> LoadTexturesFromObjModel(ObjModel* model, std::string base_path); // Carrega texturas de um modelo obj
 void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
-void DrawVirtualObjectMtl(const char* object_name, ObjModel* model, std::map<std::string, GLuint> textures_name_to_id, int obj_num); // Dsenha objetos com mtl
+void DrawVirtualObjectMtl(char obj_list[], int arrsize, ObjModel *model, std::map<std::string, GLuint> textures_name_to_id, int obj_num); //desenha com mtl
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
     //Changed to leon with no weapon to test it
-    ObjModel leonmodel("../../data/leon/leonnoweapons.obj");
+    ObjModel leonmodel("../../data/leon/JD3L9JZFR7UB7NMGULPCJC51T.obj");
     ComputeNormals(&leonmodel);
     BuildTrianglesAndAddToVirtualScene(&leonmodel);
     std::map<std::string, GLuint> leon_textures = LoadTexturesFromObjModel(&leonmodel, "../../data/leon/");
@@ -537,11 +537,13 @@ int main(int argc, char* argv[])
 
         if(first_person_view== false){    
             // LEON
+            // Arma, faca, resto do corpo, ultimo = oculos
             glActiveTexture(GL_TEXTURE0);
             printf("Leon Position: %f %f %f\n", player_position.x, player_position.y, player_position.z);
             model = Matrix_Translate(player_position.x, player_position.y, player_position.z) * Matrix_Rotate_X(-M_PI / 2.0f);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            DrawVirtualObjectMtl("leon", &leonmodel, leon_textures, LEON);
+            char leon_mask[8] = {0, 0, 1, 1, 1, 1, 1, 1};
+            DrawVirtualObjectMtl(leon_mask, sizeof(leon_mask), &leonmodel, leon_textures, LEON);
         }
 
         glActiveTexture(GL_TEXTURE2);
@@ -552,34 +554,33 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
-        printf("%f\n", (bunnybrezt));
+        //printf("%f\n", (bunnybrezt));
         
 
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, earth_id);
         double b_speed = 5.0f;
-        if(!paused){
+        if(!paused)
             brez_pos = move_along_bezier_path(coelhito_path, &bunnybrezt, b_speed, timedif);
-        }
         model = Matrix_Translate(brez_pos.x, 1.0f, brez_pos.z);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
         
-        
+        char zomb[3] = {1,1,1};
         // FEMALE ZOMBIE
         glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(5.0f, 0.0f, 5.0f) * Matrix_Rotate_X(-M_PI / 2.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl("femalezombie", &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
+        DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
 
         // MALE ZOMBIE
         glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(2.5f, 0.0f, 2.5f) * Matrix_Rotate_X(-M_PI / 2.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl("malezombie", &malezombiemodel, malezombie_textures, MALEZOMBIE);
+        DrawVirtualObjectMtl(zomb, sizeof(zomb), &malezombiemodel, malezombie_textures, MALEZOMBIE);
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -737,43 +738,45 @@ void DrawVirtualObject(const char* object_name)
     glBindVertexArray(0);
 }
 
-void DrawVirtualObjectMtl(const char *object_name, ObjModel *model, std::map<std::string, GLuint> textures_name_to_id, int obj_num)
-{
-    for (size_t i = 0; i < model->shapes.size(); ++i)
+void DrawVirtualObjectMtl(char obj_list[], int arrsize, ObjModel *model, std::map<std::string, GLuint> textures_name_to_id, int obj_num)
+{   
+    for (int i = 0; i < arrsize; i++)
         {
-            const auto &shape = model->shapes[i];
-            int material_id = shape.mesh.material_ids.empty() ? -1 : shape.mesh.material_ids[0];
-            if (material_id < 0)
-                continue;
-            const auto &material = model->materials[material_id];
+            if(obj_list[i] == 1){
+                const auto &shape = model->shapes[i];
+                int material_id = shape.mesh.material_ids.empty() ? -1 : shape.mesh.material_ids[0];
+                if (material_id < 0)
+                    continue;
+                const auto &material = model->materials[material_id];
 
-            // Ative a textura difusa do material, se existir
-            if (!material.diffuse_texname.empty())
-            {
-                // Diz ao shader que TEMOS uma textura para usar
-                glUniform1i(g_has_texture_uniform, 1);
+                // Ative a textura difusa do material, se existir
+                if (!material.diffuse_texname.empty())
+                {
+                    // Diz ao shader que TEMOS uma textura para usar
+                    glUniform1i(g_has_texture_uniform, 1);
 
-                GLuint texture_id = textures_name_to_id[material.diffuse_texname];
-                glBindTexture(GL_TEXTURE_2D, texture_id);
-            }
-            else
-            {
-                // Diz ao shader que NÃO TEMOS uma textura, então ele deve usar apenas a cor
-                glUniform1i(g_has_texture_uniform, 0);
-            }
+                    GLuint texture_id = textures_name_to_id[material.diffuse_texname];
+                    glBindTexture(GL_TEXTURE_2D, texture_id);
+                }
+                else
+                {
+                    // Diz ao shader que NÃO TEMOS uma textura, então ele deve usar apenas a cor
+                    glUniform1i(g_has_texture_uniform, 0);
+                }
 
-            // Envie parâmetros do material para o shader
-            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ka"), 1, material.ambient);
-            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Kd"), 1, material.diffuse);
-            glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ks"), 1, material.specular);
-            glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_q"), material.shininess);
-            glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_opacity"), material.dissolve);
+                // Envie parâmetros do material para o shader
+                glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ka"), 1, material.ambient);
+                glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Kd"), 1, material.diffuse);
+                glUniform3fv(glGetUniformLocation(g_GpuProgramID, "material_Ks"), 1, material.specular);
+                glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_q"), material.shininess);
+                glUniform1f(glGetUniformLocation(g_GpuProgramID, "material_opacity"), material.dissolve);
 
-            // Defina o object_id para LEON
-            glUniform1i(g_object_id_uniform, obj_num);
+                // Defina o object_id para LEON
+                glUniform1i(g_object_id_uniform, obj_num);
 
-            // Desenhe o shape
-            DrawVirtualObject(shape.name.c_str());
+                // Desenhe o shape
+                DrawVirtualObject(shape.name.c_str());
+        }
         }
 }
 
@@ -1808,7 +1811,7 @@ double approximate_curve_size(glm::vec4 points[4], int approx_precision){
     return sumofdist;
 }
 
-Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[32]){
+Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]){
     Bezier_path* atual = path;
     while(atual->next_curve != NULL){
         //incrementa "depth"
