@@ -1,7 +1,7 @@
 #include "enemies.h"
 
-Enemie::Enemie(glm::vec4 pos, glm::vec4 dir, float spd, float hp, Cube box)
-    : position(pos), direction(dir), speed(spd), health(hp), alive(true), aggressive(false), boundingBox(box) {}
+Enemie::Enemie(glm::vec4 pos, glm::vec4 dir, float spd, float hp, char t, Cube box)
+    : position(pos), direction(dir), speed(spd), health(hp), alive(true), aggressive(false), type(t), boundingBox(box) {}
 
 void Enemie::move(float delta_time)
 {

@@ -31,6 +31,8 @@
 #include <algorithm>
 #include <set>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 
 // Headers das bibliotecas OpenGL
 #include <glad/glad.h>  // Criação de contexto OpenGL 3.3
@@ -427,7 +429,30 @@ int main(int argc, char *argv[])
     coelhito_path = link_curve_to_path(coelhito_path, b_points2);
     coelhito_path = link_curve_to_path(coelhito_path, b_points3);
     coelhito_path = link_curve_to_path(coelhito_path, b_points4);
-    struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, HUMANOIDBOX);
+
+    // ENEMIES CREATION
+    #define X_MIN 10
+    #define X_MAX 48
+    #define Z_MIN 10 
+    #define Z_MAX 48
+    #define HP 5.0f
+    #define SPEED 2.0f
+    struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, 'F', HUMANOIDBOX);
+    std::vector<struct Enemie> enemies;
+    
+    for(int i = 0; i < NUM_ENEMIES; i++)
+    {
+        unsigned seed = time(0);
+        srand(seed + i);
+        float x = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+        float z = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+        if(i%2 == 0){
+            enemies.push_back(Enemie(glm::vec4(x, 0.0f, z, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'M', HUMANOIDBOX)); 
+        }
+        else{
+            enemies.push_back(Enemie(glm::vec4(x, 0.0f, z, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX)); 
+        }
+    }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -504,14 +529,17 @@ int main(int argc, char *argv[])
                 deslocar.z = 49.5;
             else if(deslocar.z <= -49.5)
                 deslocar.z = -49.5;
-            ZF.player_spot(player_position);
-            ZF.aggressive_direction(player_position);
-            ZF.move(timedif);
-            if (ZF.boundingBox.colideWithCube(HUMANOIDBOX, ZF.position, player_position))
-            {
-                printf("AIAIAIAIAIAI ME MORDEU\n");
-                glfwSetWindowShouldClose(window, GL_TRUE);
+            for(int i = 0; i < NUM_ENEMIES; i++ ){
+                enemies[i].player_spot(player_position);
+                enemies[i].aggressive_direction(player_position);
+                enemies[i].move(timedif);
+                if (enemies[i].boundingBox.colideWithCube(HUMANOIDBOX, enemies[i].position, player_position))
+                {
+                    printf("AIAIAIAIAIAI ME MORDEU\n");
+                    glfwSetWindowShouldClose(window, GL_TRUE);
+                }
             }
+            
             if(space_press && deslocar.y == 0.0f && stamina >= 10.0f){
                 jumping = true; space_press = false;
                 y_vel = 15.0f; stamina -= 10.0f;
@@ -628,17 +656,22 @@ int main(int argc, char *argv[])
         glUniform1i(g_object_id_uniform, BUNNY);
         DrawVirtualObject("the_bunny");
 
-        char zomb[3] = {1, 1, 1};
-        // FEMALE ZOMBIE
-        model = Matrix_Translate(ZF.position.x, ZF.position.y, ZF.position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(ZF.direction.x, ZF.direction.z));
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
-
-        // MALE ZOMBIE
-        model = Matrix_Translate(2.5f, 0.0f, 2.5f) * Matrix_Rotate_X(-M_PI / 2.0f);
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl(zomb, sizeof(zomb), &malezombiemodel, malezombie_textures, MALEZOMBIE);
-
+        for(int i = 0; i < NUM_ENEMIES; i++){
+            char zomb[3] = {1, 1, 1};
+            if(enemies[i].type == 'F'){
+                // FEMALE ZOMBIE
+                model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(enemies[i].direction.x, enemies[i].direction.z));
+                glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
+            }
+            else if (enemies[i].type == 'M'){
+                // MALE ZOMBIE
+                model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(enemies[i].direction.x, enemies[i].direction.z));
+                glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                DrawVirtualObjectMtl(zomb, sizeof(zomb), &malezombiemodel, malezombie_textures, MALEZOMBIE);
+            }
+        }
+        
         char woodraw[1] = {1};
         model = Matrix_Translate(0.0f, 1.0f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));

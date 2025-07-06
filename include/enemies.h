@@ -16,9 +16,10 @@ struct Enemie {
     float health;
     bool alive;
     bool aggressive;
+    char type;
     Cube boundingBox;
 
-    Enemie(glm::vec4 pos, glm::vec4 dir, float spd, float hp, Cube box);
+    Enemie(glm::vec4 pos, glm::vec4 dir, float spd, float hp, char type, Cube box);
 
     void move(float delta_time);
 
