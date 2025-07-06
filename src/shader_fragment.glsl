@@ -208,7 +208,7 @@ void main()
         
     }
     // Espectro da fonte de iluminação
-    vec3 I = vec3(0.1, 0.1, 0.1); // PREENCH AQUI o espectro da fonte de luz
+    vec3 I = vec3(0.2, 0.2, 0.2); // PREENCH AQUI o espectro da fonte de luz
 
     // Espectro da luz ambiente
     vec3 Ia = vec3(0.2, 0.2, 0.2); // PREENCHA AQUI o espectro da luz ambiente

@@ -15,6 +15,7 @@ set(SOURCES
   src/collisions.cpp
   src/bezier.cpp
   src/matrices.cpp
+  src/player.cpp
 )
 
 cmake_minimum_required(VERSION 3.5.0)

@@ -54,6 +54,7 @@
 #include "collisions.h"
 #include "enemies.h"
 #include "bezier.h"
+#include "player.h"
 
 #define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.5f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
 // Estrutura que representa um modelo geométrico carregado a partir de um
@@ -246,6 +247,7 @@ bool s_press = false;
 bool d_press = false;
 bool w_press = false;
 bool space_press = false;
+bool shift_press = false;
 bool mouse_move = false;
 bool paused = false;
 bool first_person_view = true;
@@ -488,6 +490,14 @@ int main(int argc, char *argv[])
         tree_positions.push_back(std::make_pair(posx, posz)); // Adiciona a posição da árvore na lista de posições
     }
 
+    // LEON CREATION
+    #define LEON_SPEED 2.0f
+    #define LEON_HP 10.0f
+    #define INITIAL_POS glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) // Posição inicial do Leon
+    #define INITIAL_VIEW glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) // Vetor de visão inicial do Leon
+
+    struct Player Leon(INITIAL_POS, INITIAL_VIEW, LEON_SPEED, LEON_HP, HUMANOIDBOX);
+    
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -523,81 +533,58 @@ int main(int argc, char *argv[])
         glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
         // printa o vetor deslocar
         // printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
-        glm::vec4 player_position = glm::vec4(0.0f + deslocar.x, 0.0f + deslocar.y, 0.0f + deslocar.z, 1.0f); // Posição do player
-        glm::vec4 player_view_vector = glm::vec4(x, -y, z, 0.0f);                                             // Vetor "view", sentido para onde o player está virado
+        Leon.direction = glm::vec4(x, -y, z, 0.0f);
         glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);                                       // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         double timenow = glfwGetTime();
         if (first_person_view == false)
         {
-            camera_position_c = player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - player_view_vector;
+            camera_position_c = Leon.position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - Leon.direction;
             if (camera_position_c.y <= 0.05f)
                 camera_position_c.y = 0.05f;
-            camera_view_vector = normalize(player_position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c);
+            camera_view_vector = normalize(Leon.position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c);
         }
         else
         {
-            camera_position_c = player_position + glm::vec4(0.0f, 2.0f, 0.0f, 0.0f); // Posição da câmera em primeira pessoa
-            camera_view_vector = player_view_vector;
+            camera_position_c = Leon.position + glm::vec4(0.0f, 2.0f, 0.0f, 0.0f); // Posição da câmera em primeira pessoa
+            camera_view_vector = Leon.direction;
         }
-        glm::vec4 view_frente = -camera_view_vector / norm(camera_view_vector);
-        glm::vec4 view_lado = crossproduct(camera_up_vector, view_frente) / norm(crossproduct(camera_up_vector, view_frente));
-        view_frente.y = 0.0f;                          // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
-        view_frente = view_frente / norm(view_frente); // Normalizamos o vetor "view_frente"
+        Leon.view_frente = -camera_view_vector / norm(camera_view_vector);
+        Leon.view_lado = crossproduct(camera_up_vector, Leon.view_frente) / norm(crossproduct(camera_up_vector, Leon.view_frente));
+        Leon.view_frente.y = 0.0f;                          // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
+        Leon.view_frente = Leon.view_frente / norm(Leon.view_frente); // Normalizamos o vetor "view_frente"
         glm::vec4 timenowvec = glm::vec4(timenow, timenow, timenow, 0.0f);
         double timedif = timenowvec.x - timeprevec.x;
         if (!paused)
         {
             if (w_press)
-                deslocar -= playerspeed * speedmultiplier * view_frente * (timenowvec - timeprevec);
+                Leon.move((timenowvec - timeprevec), 'F', gravity);
             if (a_press)
-                deslocar -= playerspeed * speedmultiplier * view_lado * (timenowvec - timeprevec);
+                Leon.move((timenowvec - timeprevec), 'L', gravity);
             if (s_press)
-                deslocar += playerspeed * speedmultiplier * view_frente * (timenowvec - timeprevec);
+                Leon.move((timenowvec - timeprevec), 'B', gravity);
             if (d_press)
-                deslocar += playerspeed * speedmultiplier * view_lado * (timenowvec - timeprevec);
-            if(deslocar.x >= 49.5)
-                deslocar.x = 49.5;
-            else if(deslocar.x <= -49.5)
-                deslocar.x = -49.5;
-            if(deslocar.z >= 49.5)
-                deslocar.z = 49.5;
-            else if(deslocar.z <= -49.5)
-                deslocar.z = -49.5;
+                Leon.move((timenowvec - timeprevec), 'R', gravity);
+            Leon.jump(gravity, (timenowvec - timeprevec), space_press);
+            space_press = false;
+            if(shift_press){
+                Leon.running = true;
+            }
+            else {
+                Leon.running = false;
+            }
+            Leon.run((timenowvec - timeprevec));
+
             for(int i = 0; i < NUM_ENEMIES; i++ ){
-                enemies[i].player_spot(player_position);
-                enemies[i].aggressive_direction(player_position);
+                enemies[i].player_spot(Leon.position);
+                enemies[i].aggressive_direction(Leon.position);
                 enemies[i].move(timedif);
-                if (enemies[i].boundingBox.colideWithCube(HUMANOIDBOX, enemies[i].position, player_position))
+                if (enemies[i].boundingBox.colideWithCube(HUMANOIDBOX, enemies[i].position, Leon.position))
                 {
                     printf("AIAIAIAIAIAI ME MORDEU\n");
                     glfwSetWindowShouldClose(window, GL_TRUE);
                 }
             }
-            
-            if(space_press && deslocar.y == 0.0f && stamina >= 10.0f){
-                jumping = true; space_press = false;
-                y_vel = 15.0f; stamina -= 10.0f;
-            }
-            space_press = false;
-            if(jumping){
-                deslocar.y += y_vel*timedif;
-                y_vel -= gravity*timedif;
-                if(deslocar.y <= 0.0f){
-                    jumping = false;
-                }
-            }
-            deslocar.y -= gravity*timedif;
-            if(deslocar.y < 0.0f)
-                deslocar.y = 0.0f;
-            if(speedmultiplier == 3.0f)
-                stamina -= timedif*speedmultiplier*10;
-            else{
-                stamina += timedif*speedmultiplier*10;
-                if(stamina > staminamax)
-                    stamina = staminamax;
-            }
-            if(stamina <= 0.05)
-                speedmultiplier = 1.0f;
+            Leon.updatePosition(gravity, (timenowvec - timeprevec));
         }
         if (lastpaused != paused)
         {
@@ -764,8 +751,8 @@ int main(int argc, char *argv[])
             // LEON
             // Arma, faca, resto do corpo, ultimo = oculos
             glActiveTexture(GL_TEXTURE0);
-            // printf("Leon Position: %f %f %f\n", player_position.x, player_position.y, player_position.z);
-            model = Matrix_Translate(player_position.x, player_position.y, player_position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(g_CameraTheta);
+            // printf("Leon Position: %f %f %f\n", Leon.position.x, Leon.position.y, Leon.position.z);
+            model = Matrix_Translate(Leon.position.x, Leon.position.y, Leon.position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(g_CameraTheta);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             char leon_mask[8] = {0, 0, 1, 1, 1, 1, 1, 1};
             DrawVirtualObjectMtl(leon_mask, sizeof(leon_mask), &leonmodel, leon_textures, LEON);
@@ -784,7 +771,7 @@ int main(int argc, char *argv[])
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
-        TextRendering_ShowStamina(window, stamina, staminamax);
+        TextRendering_ShowStamina(window, Leon.stamina, Leon.staminamax);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
         TextRendering_ShowProjection(window);
@@ -1658,9 +1645,9 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mod)
     else if ((key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT))
     {
         if (action == GLFW_PRESS)
-            speedmultiplier = 3.0f;
+            shift_press = true;
         else if (action == GLFW_RELEASE)
-            speedmultiplier = 1.0f;
+            shift_press = false;
     }
     else if ((key == GLFW_KEY_V && action == GLFW_PRESS))
     {
