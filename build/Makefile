@@ -272,6 +272,30 @@ src/matrices.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/matrices.cpp.s
 .PHONY : src/matrices.cpp.s
 
+src/player.obj: src/player.cpp.obj
+.PHONY : src/player.obj
+
+# target to build an object file
+src/player.cpp.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/player.cpp.obj
+.PHONY : src/player.cpp.obj
+
+src/player.i: src/player.cpp.i
+.PHONY : src/player.i
+
+# target to preprocess a source file
+src/player.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/player.cpp.i
+.PHONY : src/player.cpp.i
+
+src/player.s: src/player.cpp.s
+.PHONY : src/player.s
+
+# target to generate assembly for a file
+src/player.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\main.dir\build.make CMakeFiles/main.dir/src/player.cpp.s
+.PHONY : src/player.cpp.s
+
 src/stb_image.obj: src/stb_image.cpp.obj
 .PHONY : src/stb_image.obj
 
@@ -371,6 +395,9 @@ help:
 	@echo ... src/matrices.obj
 	@echo ... src/matrices.i
 	@echo ... src/matrices.s
+	@echo ... src/player.obj
+	@echo ... src/player.i
+	@echo ... src/player.s
 	@echo ... src/stb_image.obj
 	@echo ... src/stb_image.i
 	@echo ... src/stb_image.s

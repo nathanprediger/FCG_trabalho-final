@@ -64,7 +64,7 @@ void Player::jump(float gravity, glm::vec4 diff_time, bool space_press) {
 
 void Player::run (glm::vec4 diff_time) {
     if(running){
-        if(stamina >0.05f) stamina -= diff_time.x * RUNNING_SPEED * 10.0f;
+        if(stamina >0.05f) stamina -= diff_time.x * RUNNING_SPEED * 5.0f;
         else {
             running = false;
             stamina = 0.05f;

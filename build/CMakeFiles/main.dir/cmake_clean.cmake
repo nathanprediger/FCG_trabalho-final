@@ -14,6 +14,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/main.dir/src/main.cpp.obj.d"
   "CMakeFiles/main.dir/src/matrices.cpp.obj"
   "CMakeFiles/main.dir/src/matrices.cpp.obj.d"
+  "CMakeFiles/main.dir/src/player.cpp.obj"
+  "CMakeFiles/main.dir/src/player.cpp.obj.d"
   "CMakeFiles/main.dir/src/stb_image.cpp.obj"
   "CMakeFiles/main.dir/src/stb_image.cpp.obj.d"
   "CMakeFiles/main.dir/src/textrendering.cpp.obj"
