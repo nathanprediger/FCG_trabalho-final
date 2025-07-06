@@ -253,7 +253,7 @@ float gravity = 9.8f;
 float speedmultiplier = 1.0f;
 float playerspeed = 2.0f;
 
-#define NUM_ENEMIES 15
+
 
 int main(int argc, char *argv[])
 {
@@ -430,28 +430,62 @@ int main(int argc, char *argv[])
     coelhito_path = link_curve_to_path(coelhito_path, b_points3);
     coelhito_path = link_curve_to_path(coelhito_path, b_points4);
 
-    // ENEMIES CREATION
-    #define X_MIN 10
+    #define MAP_LENGTH 100
+    int map_ocupation[MAP_LENGTH][MAP_LENGTH]={0};
+    // OBJECT CREATION
+    #define X_MIN 5
     #define X_MAX 48
-    #define Z_MIN 10 
+    #define Z_MIN 5 
     #define Z_MAX 48
+
+    // ENEMIES CREATION
     #define HP 5.0f
     #define SPEED 2.0f
+    #define NUM_ENEMIES 15
     struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, 'F', HUMANOIDBOX);
     std::vector<struct Enemie> enemies;
-    
+    unsigned seed = time(0);
+    srand(seed);
     for(int i = 0; i < NUM_ENEMIES; i++)
     {
-        unsigned seed = time(0);
-        srand(seed + i);
-        float x = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
-        float z = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+        float posx = 0;
+        float posz = 0;
+        int j = 0;
+        do{
+            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+            j++;
+        }while(map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] != 0); // Verifica se a posição já está ocupada por outro objeto
+         map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] = 1; // Marca a posição como ocupada
+        
         if(i%2 == 0){
-            enemies.push_back(Enemie(glm::vec4(x, 0.0f, z, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'M', HUMANOIDBOX)); 
+            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'M', HUMANOIDBOX)); 
         }
         else{
-            enemies.push_back(Enemie(glm::vec4(x, 0.0f, z, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX)); 
+            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX)); 
         }
+    }
+
+    // TREES CREATION
+    #define NUM_TREES 30
+    std::vector<std::pair<float,float>> tree_positions;
+    for(int i = 0; i < NUM_TREES; i++)
+    {
+        float posx = 0;
+        float posz = 0;
+        int j = 0;
+        do{
+            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+            j++;
+        }while(map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] != 0); // Verifica se a posição já está ocupada por outro objeto
+        // ocupa as posições envolta da arvore
+        for(int x = -3; x <= 3; x++)
+            for(int z = -3; z <= 3; z++)
+                if(x != 0 || z != 0)
+                    map_ocupation[(int)(posx + MAP_LENGTH/2) + x][(int)(posz + MAP_LENGTH/2) + z] = 1; // Marca as posições ao redor como ocupadas
+        
+        tree_positions.push_back(std::make_pair(posx, posz)); // Adiciona a posição da árvore na lista de posições
     }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
@@ -679,14 +713,17 @@ int main(int argc, char *argv[])
         DrawVirtualObjectMtl(woodraw, sizeof(woodraw), &woodmodel, wood_textures, WOOD);
         glEnable(GL_CULL_FACE);
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, tree_mask_id);
-        char treedraw[1] = {1};
-        model = Matrix_Translate(-5.0f, 0.0f, -5.0f) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);;
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glDisable(GL_CULL_FACE); 
-        DrawVirtualObjectMtl(treedraw, sizeof(treedraw), &treemodel, tree_textures, TREE);
-        glEnable(GL_CULL_FACE);
+        for(int i = 0; i < NUM_TREES; i++){
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, tree_mask_id);
+            char treedraw[1] = {1};
+            model = Matrix_Translate(tree_positions[i].first, 0.0f, tree_positions[i].second) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);;
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glDisable(GL_CULL_FACE); 
+            DrawVirtualObjectMtl(treedraw, sizeof(treedraw), &treemodel, tree_textures, TREE);
+            glEnable(GL_CULL_FACE);
+        }
+        
 
         char housedraw[3] = {1,1,1};
         model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
