@@ -357,6 +357,7 @@ CMakeFiles/main.dir/src/collisions.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/F
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec3.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec4.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vector_relational.hpp \
+  C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/matrices.h \
   C:/msys64/ucrt64/include/_mingw.h \
   C:/msys64/ucrt64/include/_mingw_mac.h \
   C:/msys64/ucrt64/include/_mingw_off_t.h \
@@ -579,6 +580,7 @@ CMakeFiles/main.dir/src/enemies.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec3.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec4.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vector_relational.hpp \
+  C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/matrices.h \
   C:/msys64/ucrt64/include/_mingw.h \
   C:/msys64/ucrt64/include/_mingw_mac.h \
   C:/msys64/ucrt64/include/_mingw_off_t.h \
@@ -1024,6 +1026,7 @@ CMakeFiles/main.dir/src/main.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_tra
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec4.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vector_relational.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/matrices.h \
+  C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/player.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/stb_image.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/tiny_obj_loader.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/utils.h \
@@ -1750,6 +1753,7 @@ CMakeFiles/main.dir/src/player.cpp.obj: C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_t
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec3.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vec4.hpp \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/glm/vector_relational.hpp \
+  C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/matrices.h \
   C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/player.h \
   C:/msys64/ucrt64/include/_mingw.h \
   C:/msys64/ucrt64/include/_mingw_mac.h \
@@ -3350,9 +3354,9 @@ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/movdirintrin.h:
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/mwaitxintrin.h:
 
-C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/prfchwintrin.h:
-
 C:/msys64/ucrt64/include/c++/14.2.0/iosfwd:
+
+C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/prfchwintrin.h:
 
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/raointintrin.h:
 
@@ -3403,6 +3407,8 @@ C:/msys64/ucrt64/include/c++/14.2.0/bits/locale_classes.h:
 C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/14.2.0/include/xtestintrin.h:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/GLFW/glfw3.h:
+
+C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/player.h:
 
 C:/msys64/ucrt64/include/c++/14.2.0/bits/codecvt.h:
 
@@ -3557,7 +3563,5 @@ C:/msys64/ucrt64/include/time.h:
 C:/msys64/ucrt64/include/wctype.h:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/matrices.cpp:
-
-C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/include/player.h:
 
 C:/Users/dedes/Desktop/URGOPT2/FGC/FCG_trabalho-final/src/stb_image.cpp:

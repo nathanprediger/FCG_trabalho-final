@@ -24,3 +24,33 @@ bool Cube::colideWithPlane(const Plane &Plane)
     float r = glm::dot(glm::abs(Plane.normal), extents);
     return std::abs(d) <= r;
 }
+
+bool Cube::collideWithRay(glm::vec4 ray, glm::vec4 origin, glm::vec4 cube_org){
+    float t1,t2;
+    float t_entrada, t_saida;
+    t_entrada = INFINITY;
+    t_saida = -INFINITY;
+    for(int i = 0;i < 3; i++){
+        if(ray[i] == 0.0f){
+            if(origin[i] < (min[i]+ cube_org[i]) || origin[i] > (max[i]+ cube_org[i]))
+                return false;
+        }
+        else{
+            t1 = ((min[i] + cube_org[i]) - origin[i])/ray[i];
+            t2 = ((max[i]+ cube_org[i]) - origin[i])/ray[i];
+            if(t1 > t2){
+                float temp = t1;
+                t1 = t2;
+                t2 = temp;
+            }
+            float t_entrada = (t_entrada > t1) ? t_entrada : t1;
+            float t_saida = (t_saida > t2) ? t2 : t_saida;
+
+            if(t_entrada > t_saida)
+                return false;
+        }
+    }
+    if(t_entrada < 0.0f)
+        return false;
+    return true;
+}

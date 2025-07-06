@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include "matrices.h"
 // Estrutura para um plano
 struct Plane {
     glm::vec3 normal;
@@ -34,4 +35,5 @@ struct Cube {
 
     bool colideWithCube(const Cube &other, glm::vec4 pos_1, glm::vec4 pos_2) const;
     bool colideWithPlane(const Plane& plane);
+    bool collideWithRay(glm::vec4 ray, glm::vec4 origin, glm::vec4 cube_org);
 };
