@@ -147,6 +147,7 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow *window, glm::mat4 M,
 // outras informações do programa. Definidas após main().
 void TextRendering_ShowModelViewProjection(GLFWwindow *window, glm::mat4 projection, glm::mat4 view, glm::mat4 model, glm::vec4 p_model);
 void TextRendering_ShowEulerAngles(GLFWwindow *window);
+void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstamina);
 void TextRendering_ShowProjection(GLFWwindow *window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow *window);
 
@@ -242,9 +243,11 @@ bool a_press = false;
 bool s_press = false;
 bool d_press = false;
 bool w_press = false;
+bool space_press = false;
 bool mouse_move = false;
 bool paused = false;
 bool first_person_view = true;
+float gravity = 9.8f;
 float speedmultiplier = 1.0f;
 float playerspeed = 2.0f;
 
@@ -330,7 +333,6 @@ int main(int argc, char *argv[])
     GLuint rocky_terrain_id = LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1);   // TextureImage2
     GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
     GLuint tree_mask_id = LoadTextureImage("../../data/tree/A_5e6233bf8b6646988a1a6e8dc4697172_ped-tga.png", 0); // TextureImage4
-    GLuint fence_mask_id = LoadTextureImage("../../data/chainfence/modular_chainlink_fence_wire_alpha_1k.png", 0);
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel planemodel("../../data/plane.obj");
@@ -365,7 +367,7 @@ int main(int argc, char *argv[])
     BuildTrianglesAndAddToVirtualScene(&woodmodel);
     std::map<std::string, GLuint> wood_textures = LoadTexturesFromObjModel(&woodmodel, "../../data/tronco/");
 
-    ObjModel chainfencemodel("../../data/chainfence/modular_chainlink_fence_4k.obj");
+    ObjModel chainfencemodel("../../data/chainfence/fencelinda.obj");
     ComputeNormals(&chainfencemodel);
     BuildTrianglesAndAddToVirtualScene(&chainfencemodel);
     std::map<std::string, GLuint> chainfence_textures = LoadTexturesFromObjModel(&chainfencemodel, "../../data/chainfence/");
@@ -404,6 +406,7 @@ int main(int argc, char *argv[])
     glm::vec4 deslocar = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     int sense = 50;
     bool lastpaused = paused;
+    bool jumping = false;
     double bunnybrezt = 0;
     double timeprev = glfwGetTime();
     glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
@@ -412,6 +415,9 @@ int main(int argc, char *argv[])
     glm::vec4 brez_pos = glm::vec4(5.0f, 0.0f, 5.0f, 1.0f);
     glm::vec4 prev_brez_pos = glm::vec4(5.0f, 0.0f, 5.0f, 1.0f);
     double ang = 1;
+    double y_vel = 0.0f;
+    float staminamax = 100.0f;
+    float stamina = staminamax;
     glm::vec4 b_points1[4] = {glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f, 0.0f, 8.0f, 1.0f), glm::vec4(10.0f, 0.0f, 5.0f, 1.0f)};
     glm::vec4 b_points2[2] = {glm::vec4(15.0f, 0.0f, 2.0f, 1.0f), glm::vec4(18.0f, 0.0f, 6.0f, 1.0f)};
     glm::vec4 b_points3[2] = {glm::vec4(26.0f, 0.0f, 15.0f, 1.0f), glm::vec4(30.0f, 0.0f, 19.0f, 1.0f)};
@@ -490,6 +496,14 @@ int main(int argc, char *argv[])
                 deslocar += playerspeed * speedmultiplier * view_frente * (timenowvec - timeprevec);
             if (d_press)
                 deslocar += playerspeed * speedmultiplier * view_lado * (timenowvec - timeprevec);
+            if(deslocar.x >= 49.5)
+                deslocar.x = 49.5;
+            else if(deslocar.x <= -49.5)
+                deslocar.x = -49.5;
+            if(deslocar.z >= 49.5)
+                deslocar.z = 49.5;
+            else if(deslocar.z <= -49.5)
+                deslocar.z = -49.5;
             ZF.player_spot(player_position);
             ZF.aggressive_direction(player_position);
             ZF.move(timedif);
@@ -498,6 +512,30 @@ int main(int argc, char *argv[])
                 printf("AIAIAIAIAIAI ME MORDEU\n");
                 glfwSetWindowShouldClose(window, GL_TRUE);
             }
+            if(space_press && deslocar.y == 0.0f && stamina >= 10.0f){
+                jumping = true; space_press = false;
+                y_vel = 15.0f; stamina -= 10.0f;
+            }
+            space_press = false;
+            if(jumping){
+                deslocar.y += y_vel*timedif;
+                y_vel -= gravity*timedif;
+                if(deslocar.y <= 0.0f){
+                    jumping = false;
+                }
+            }
+            deslocar.y -= gravity*timedif;
+            if(deslocar.y < 0.0f)
+                deslocar.y = 0.0f;
+            if(speedmultiplier == 3.0f)
+                stamina -= timedif*speedmultiplier*10;
+            else{
+                stamina += timedif*speedmultiplier*10;
+                if(stamina > staminamax)
+                    stamina = staminamax;
+            }
+            if(stamina <= 0.05)
+                speedmultiplier = 1.0f;
         }
         if (lastpaused != paused)
         {
@@ -570,7 +608,7 @@ int main(int argc, char *argv[])
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
         // Desenhamos o plano do chão
-        model = Matrix_Translate(0.0f, 0.0f, 0.0f) * Matrix_Scale(50.0f, 1.0f, 50.0f); // Translação e escala do plano
+        model = Matrix_Translate(0.0f, 0.0f, 0.0f) * Matrix_Scale(100.0f, 1.0f, 100.0f); // Translação e escala do plano
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
@@ -592,19 +630,16 @@ int main(int argc, char *argv[])
 
         char zomb[3] = {1, 1, 1};
         // FEMALE ZOMBIE
-        glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(ZF.position.x, ZF.position.y, ZF.position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(ZF.direction.x, ZF.direction.z));
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
 
         // MALE ZOMBIE
-        glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(2.5f, 0.0f, 2.5f) * Matrix_Rotate_X(-M_PI / 2.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(zomb, sizeof(zomb), &malezombiemodel, malezombie_textures, MALEZOMBIE);
 
         char woodraw[1] = {1};
-        glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(0.0f, 1.0f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glDisable(GL_CULL_FACE); 
@@ -614,7 +649,6 @@ int main(int argc, char *argv[])
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, tree_mask_id);
         char treedraw[1] = {1};
-        glActiveTexture(GL_TEXTURE0);
         model = Matrix_Translate(-5.0f, 0.0f, -5.0f) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);;
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glDisable(GL_CULL_FACE); 
@@ -622,18 +656,24 @@ int main(int argc, char *argv[])
         glEnable(GL_CULL_FACE);
 
         char housedraw[3] = {1,1,1};
-        glActiveTexture(GL_TEXTURE0);
         model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(housedraw, sizeof(housedraw), &housemodel, house_textures, HOUSE);
-
-        char chaindraw[20] = {0};
-        for(int i=0;i<20;i++)
-            chaindraw[i] = 1;
-        glActiveTexture(GL_TEXTURE0);
-        model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);        
+        char chaindraw[3] = {1,1,1};
+        for(int j = 0; j < 2; j++){
+            int variacao_x = (j%2) ? 0 : 1;
+            int variacao_z = (j%2) ? 1 : 0;
+            for(int i = 1 - j; i < 51 - j; i++){
+                model = Matrix_Scale(1.0f, 1.0f, 1.0f) * Matrix_Translate(50.0f - (i*variacao_x)*2, 0.0f, 50.0f - (i*variacao_z)*2)*Matrix_Rotate_Y(j*M_PI/2  + M_PI); 
+                glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);    
+            }
+            for(int i = 1 - j; i < 51 - j; i++){
+                model = Matrix_Scale(1.0f, 1.0f, 1.0f) * Matrix_Translate(-50.0f + (i*variacao_x)*2, 0.0f, -50.0f + (i*variacao_z)*2)*Matrix_Rotate_Y(j*M_PI/2); 
+                glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);    
+            }  
+        }
 
 
         glUseProgram(g_GpuProgramSkyboxID);
@@ -674,7 +714,7 @@ int main(int argc, char *argv[])
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
-        TextRendering_ShowEulerAngles(window);
+        TextRendering_ShowStamina(window, stamina, staminamax);
 
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
         TextRendering_ShowProjection(window);
@@ -1528,6 +1568,10 @@ void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mod)
     {
         paused = !paused;
     }
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+        space_press = true;
+    }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
     else if (key == GLFW_KEY_P && action == GLFW_PRESS)
@@ -1630,7 +1674,7 @@ void TextRendering_ShowEulerAngles(GLFWwindow *window)
     float pad = TextRendering_LineHeight(window);
 
     char buffer[80];
-    snprintf(buffer, 80, "Euler Angles rotation matrix = Z(%.2f)*Y(%.2f)*X(%.2f)\n", g_AngleZ, g_AngleY, g_AngleX);
+    snprintf(buffer, 80, "Euler Angles rotation matrix = Z(%.2f)*Y(%.2f)*X(%.2f)\n", g_AngleX, g_AngleY, g_AngleZ);
 
     TextRendering_PrintString(window, buffer, -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
 }
@@ -1879,4 +1923,16 @@ double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point)
         return 0.0f;
     }
     return atan2(dir_vec.x, dir_vec.z);
+}
+
+void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstamina){
+    if (!g_ShowInfoText)
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+
+    char buffer[80];
+    snprintf(buffer, 80, "Stamina: %.2f/%.2f\n", stamina, maxstamina);
+
+    TextRendering_PrintString(window, buffer, -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
 }
