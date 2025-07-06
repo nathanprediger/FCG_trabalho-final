@@ -57,7 +57,7 @@
 #include "player.h"
 
 #define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.8f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
-#define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f,0.0f,-0.6f));
+#define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f,0.0f,-0.6f))
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -583,6 +583,7 @@ int main(int argc, char *argv[])
                         }
                     }
                     Leon.shooting = true;
+                    g_LeftMouseButtonPressed = false;
                 }
             }
             if(Leon.shooting == true){
@@ -599,7 +600,6 @@ int main(int argc, char *argv[])
             }
             shootinganim = (shootinganim >= 0.1f) ? shootinganim-(timedif*10) : 0.0f;
             reloadinganim = (reloadinganim >= 0.1f) ? reloadinganim -(timedif*5) : 0.0f;
-            printf("%f\n", shootinganim);
             if (w_press)
                 Leon.move((timenowvec - timeprevec), 'F', gravity);
             if (a_press)
@@ -622,7 +622,13 @@ int main(int argc, char *argv[])
                 if(enemies[i].alive == true){
                     enemies[i].player_spot(Leon.position);
                     enemies[i].aggressive_direction(Leon.position);
-                    enemies[i].move(timedif);
+                    bool canmove = true;
+                    for(int j = 0; j < NUM_TREES; j++){
+                        if(enemies[i].boundingBox.colideWithCube(TREEBOX, enemies[i].position + enemies[i].direction, glm::vec4(tree_positions[j].first, 0.0f, tree_positions[j].second, 1.0f)))
+                            canmove = false;
+                    }
+                    if(canmove)
+                        enemies[i].move(timedif);
                     if (enemies[i].boundingBox.colideWithCube(HUMANOIDBOX, enemies[i].position, Leon.position))
                     {
                         printf("AIAIAIAIAIAI ME MORDEU\n");
@@ -630,6 +636,19 @@ int main(int argc, char *argv[])
                     }
                 }
             }
+            bool collision[3] = {false,false, false};
+            for(int i = 0; i < NUM_TREES; i++){
+                glm::vec4 treepos = glm::vec4(tree_positions[i].first, 0.0f, tree_positions[i].second, 1.0f);
+                if(tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.deslocar.x, Leon.position.y, Leon.position.z, 1.0f)))
+                    collision[0] = true;
+                if(tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.deslocar.y, Leon.position.z, 1.0f)))
+                    collision[1] = true;
+                if(tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.position.y, Leon.deslocar.z, 1.0f)))
+                    collision[2] = true;
+            }
+            Leon.deslocar.x = (collision[0]) ? Leon.position.x : Leon.deslocar.x;
+            Leon.deslocar.y = (collision[1]) ? Leon.position.y : Leon.deslocar.y;
+            Leon.deslocar.z = (collision[2]) ? Leon.position.z : Leon.deslocar.z;
             Leon.updatePosition(gravity, (timenowvec - timeprevec));
         }
         if (lastpaused != paused)
