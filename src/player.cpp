@@ -5,8 +5,8 @@
 Player::Player(glm::vec4 pos, glm::vec4 dir, float spd, float hp, Cube box)
     : position(pos), direction(dir), deslocar(glm::vec4(0.0f,0.0f,0.0f,0.0f)), view_frente(glm::vec4(0.0f,0.0f,0.0f,0.0f)), 
       view_lado(glm::vec4(0.0f,0.0f,0.0f,0.0f)), speed(spd), health(hp), alive(true),
-      jumping(false), running(false), y_vel(0.0f), stamina(100.0f), staminamax(100.0f),
-      boundingBox(box) {}
+      jumping(false), running(false), y_vel(0.0f), stamina(100.0f), staminamax(100.0f), shooting(false),
+      boundingBox(box), reloading(false), ammo(7) {}
 
 void Player::updatePosition(float gravity, glm::vec4 diff_time) {
     position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);

@@ -25,32 +25,42 @@ bool Cube::colideWithPlane(const Plane &Plane)
     return std::abs(d) <= r;
 }
 
-bool Cube::collideWithRay(glm::vec4 ray, glm::vec4 origin, glm::vec4 cube_org){
+bool Cube::colideWithRay(glm::vec4 ray, glm::vec4 origin, glm::vec4 cube_org){
     float t1,t2;
     float t_entrada, t_saida;
-    t_entrada = INFINITY;
-    t_saida = -INFINITY;
+    t_entrada = -INFINITY;
+    t_saida = INFINITY;
+    glm::vec3 minim = glm::vec3(min.x,-min.y,min.z);
+    glm::vec3 maxim = glm::vec3(max.x,-max.y,max.z);
     for(int i = 0;i < 3; i++){
         if(ray[i] == 0.0f){
-            if(origin[i] < (min[i]+ cube_org[i]) || origin[i] > (max[i]+ cube_org[i]))
+            if(origin[i] < (minim[i]+ cube_org[i]) || origin[i] > (maxim[i]+ cube_org[i]))
                 return false;
         }
         else{
-            t1 = ((min[i] + cube_org[i]) - origin[i])/ray[i];
-            t2 = ((max[i]+ cube_org[i]) - origin[i])/ray[i];
+            t1 = ((minim[i] + cube_org[i]) - origin[i])/ray[i];
+            t2 = ((maxim[i]+ cube_org[i]) - origin[i])/ray[i];
             if(t1 > t2){
                 float temp = t1;
                 t1 = t2;
                 t2 = temp;
             }
-            float t_entrada = (t_entrada > t1) ? t_entrada : t1;
-            float t_saida = (t_saida > t2) ? t2 : t_saida;
+            t_entrada = (t_entrada > t1) ? t_entrada : t1;
+            t_saida = (t_saida > t2) ? t2 : t_saida;
 
             if(t_entrada > t_saida)
                 return false;
         }
     }
-    if(t_entrada < 0.0f)
-        return false;
+    if(t_entrada <= t_saida && t_saida >= 0.0f)
+        return true;
+    return false;
+}
+
+bool Cube::colideWithPoint(glm::vec4 cubepos, glm::vec4 point){
+    for(int i = 0; i < 3; i++){
+        if(min[i] + cubepos[i] > point[i] || max[i] + cubepos[i] < point[i])
+            return false;
+    }
     return true;
 }

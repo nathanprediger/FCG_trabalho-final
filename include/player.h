@@ -18,6 +18,9 @@ struct Player {
     bool alive;
     bool jumping;
     bool running;
+    bool shooting;
+    bool reloading;
+    int ammo;
     float y_vel;
     float stamina;
     float staminamax;

@@ -56,7 +56,8 @@
 #include "bezier.h"
 #include "player.h"
 
-#define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.5f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
+#define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.8f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
+#define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f,0.0f,-0.6f));
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -234,6 +235,7 @@ GLint g_object_id_uniform;
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
 GLint g_has_texture_uniform;
+GLint g_shading_model_uniform;
 
 // SKYBOX SHADERS VAR
 GLuint g_GpuProgramSkyboxID = 0;
@@ -405,7 +407,6 @@ int main(int argc, char *argv[])
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    glm::vec4 deslocar = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
     int sense = 50;
     bool lastpaused = paused;
     bool jumping = false;
@@ -502,13 +503,15 @@ int main(int argc, char *argv[])
         }
         tree_positions.push_back(std::make_pair(posx, posz)); // Adiciona a posição da árvore na lista de posições
     }
+    Cube tree_BBOX = TREEBOX;
     #define LEON_SPEED 2.0f
     #define LEON_HP 10.0f
     #define INITIAL_POS glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) // Posição inicial do Leon
     #define INITIAL_VIEW glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) // Vetor de visão inicial do Leon
 
     struct Player Leon(INITIAL_POS, INITIAL_VIEW, LEON_SPEED, LEON_HP, HUMANOIDBOX);
-
+    double shootinganim = 0.0f;
+    double reloadinganim = 0.0f;
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -567,20 +570,36 @@ int main(int argc, char *argv[])
         double timedif = timenowvec.x - timeprevec.x;
         if (!paused)
         {
-            if(g_LeftMouseButtonPressed){
-                glm::vec4 shotdir = Leon.direction;
-                for(int i = 0; i < NUM_ENEMIES; i++){
-                    if(enemies[i].alive == true && dotproduct(shotdir, enemies[i].position - Leon.position) < M_PI){
-                        printf("\n\n\nZUMBI %d\n", i);
-                        printf("Rayx: %f, Lpx: %f, Epx: %f\n", shotdir.x, Leon.position.x, enemies[i].position.x);
-                        printf("Rayy: %f, Lpy: %f, Epy: %f\n", shotdir.y, Leon.position.y, enemies[i].position.y);
-                        printf("Rayz: %f, Lpz: %f, Epz: %f\n", shotdir.z, Leon.position.z, enemies[i].position.z);
-                        if(enemies[i].boundingBox.collideWithRay(shotdir, Leon.position, enemies[i].position))
-                            enemies[i].alive = false;
+            if(g_LeftMouseButtonPressed && Leon.shooting == false && shootinganim <= 0.1f && Leon.reloading == false){
+                if(Leon.ammo == 0)
+                    Leon.reloading = true;
+                else{
+                    glm::vec4 shotdir = Leon.direction;
+                    Leon.ammo--;
+                    for(int i = 0; i < NUM_ENEMIES; i++){
+                        if(enemies[i].alive == true){
+                            if(enemies[i].boundingBox.colideWithRay(shotdir, Leon.position, enemies[i].position))
+                                enemies[i].alive = false;
+                        }
                     }
+                    Leon.shooting = true;
                 }
-                g_LeftMouseButtonPressed = false;
             }
+            if(Leon.shooting == true){
+                shootinganim += 20*timedif;
+                if(shootinganim >= 1.0f)
+                    Leon.shooting = false;
+            }
+            if(Leon.reloading == true){
+                reloadinganim += 10*timedif;
+                if(reloadinganim >= 3.0){
+                    Leon.reloading = false;
+                    Leon.ammo = 7;
+                }
+            }
+            shootinganim = (shootinganim >= 0.1f) ? shootinganim-(timedif*10) : 0.0f;
+            reloadinganim = (reloadinganim >= 0.1f) ? reloadinganim -(timedif*5) : 0.0f;
+            printf("%f\n", shootinganim);
             if (w_press)
                 Leon.move((timenowvec - timeprevec), 'F', gravity);
             if (a_press)
@@ -667,6 +686,8 @@ int main(int argc, char *argv[])
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
+        #define GOURAUD 0
+        #define PHONG 1
 
         #define SPHERE 0
         #define BUNNY 1
@@ -681,6 +702,7 @@ int main(int argc, char *argv[])
         #define HOUSE 10
         #define FENCE 11
 
+        glUniform1i(g_shading_model_uniform,PHONG);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
         // Desenhamos o plano do chão
@@ -690,6 +712,7 @@ int main(int argc, char *argv[])
         DrawVirtualObject("the_plane");
         // printf("%f\n", (bunnybrezt));
 
+            
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, earth_id);
         double b_speed = 6.0f;
@@ -722,6 +745,7 @@ int main(int argc, char *argv[])
             }
         }
         
+        glUniform1i(g_shading_model_uniform,GOURAUD);
         char woodraw[1] = {1};
         model = Matrix_Translate(0.0f, 1.0f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -729,6 +753,7 @@ int main(int argc, char *argv[])
         DrawVirtualObjectMtl(woodraw, sizeof(woodraw), &woodmodel, wood_textures, WOOD);
         glEnable(GL_CULL_FACE);
 
+        glUniform1i(g_shading_model_uniform,PHONG);
         for(int i = 0; i < NUM_TREES; i++){
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, tree_mask_id);
@@ -791,9 +816,10 @@ int main(int argc, char *argv[])
             glClear(GL_DEPTH_BUFFER_BIT);
             glm::mat4 gun_view_matrix = Matrix_Identity();
             glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(gun_view_matrix));
-            model = Matrix_Translate(0.8f, -0.6f, -1.5f)                   
+            model = Matrix_Translate(0.8f, -0.6f, -1.5f + reloadinganim)                   
               * Matrix_Rotate_Y(M_PI)     
-              * Matrix_Scale(0.4f, 0.4f, 0.4f);
+              * Matrix_Scale(0.4f, 0.4f, 0.4f)
+              * Matrix_Rotate_X(-shootinganim + reloadinganim);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             DrawVirtualObjectMtl(gundraw, sizeof(gundraw), &gunmodel, gun_textures, GUN);
         }
@@ -1047,6 +1073,7 @@ void LoadShadersFromFiles()
     g_bbox_min_uniform = glGetUniformLocation(g_GpuProgramID, "bbox_min");
     g_bbox_max_uniform = glGetUniformLocation(g_GpuProgramID, "bbox_max");
     g_has_texture_uniform = glGetUniformLocation(g_GpuProgramID, "u_has_texture");
+    g_shading_model_uniform = glGetUniformLocation(g_GpuProgramID, "shading_model");
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(g_GpuProgramID);
