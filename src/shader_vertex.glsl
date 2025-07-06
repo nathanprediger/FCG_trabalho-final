@@ -1,24 +1,69 @@
 #version 330 core
 
-// Atributos de vértice recebidos como entrada ("in") pelo Vertex Shader.
-// Veja a função BuildTrianglesAndAddToVirtualScene() em "main.cpp".
+// Atributos de vértice
 layout (location = 0) in vec4 model_coefficients;
 layout (location = 1) in vec4 normal_coefficients;
 layout (location = 2) in vec2 texture_coefficients;
 
-// Matrizes computadas no código C++ e enviadas para a GPU
+// Matrizes
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-// Atributos de vértice que serão gerados como saída ("out") pelo Vertex Shader.
-// ** Estes serão interpolados pelo rasterizador! ** gerando, assim, valores
-// para cada fragmento, os quais serão recebidos como entrada pelo Fragment
-// Shader. Veja o arquivo "shader_fragment.glsl".
+// ====================================================================
+// NOVO UNIFORM PARA CONTROLE
+// ====================================================================
+uniform int shading_model; // 0 = Gouraud, 1 = Phong
+// ====================================================================
+
+// Saídas para o Fragment Shader
 out vec4 position_world;
 out vec4 position_model;
 out vec4 normal;
 out vec2 texcoords;
+
+// ====================================================================
+// NOVA SAÍDA (APENAS PARA O CAMINHO GOURAUD)
+// ====================================================================
+out vec3 gouraud_color;
+// ====================================================================
+
+// --- Constantes e Uniforms para o caminho Gouraud ---
+#define GOURAUD 0
+#define PHONG 1
+
+// Precisamos de todos os uniforms aqui para o cálculo Gouraud
+uniform int object_id;
+uniform vec4 bbox_min;
+uniform vec4 bbox_max;
+uniform sampler2D TextureImage0;
+uniform sampler2D TextureImage1;
+uniform sampler2D TextureImage2;
+uniform vec3 material_Ka;
+uniform vec3 material_Kd;
+uniform vec3 material_Ks;
+uniform float material_q;
+uniform int u_has_texture;
+vec4 color;
+// Object IDs
+#define SPHERE 0
+#define BUNNY  1
+#define PLANE  2
+#define WINE 3
+#define GUN 4
+#define LEON 5
+#define MALEZOMBIE 6
+#define FEMALEZOMBIE 7
+#define WOOD 8
+#define TREE 9
+#define HOUSE 10
+#define FENCE 11
+
+#define M_PI   3.14159265358979323846
+#define M_PI_2 1.57079632679489661923
+
+#define BLINN_PHONG 0 
+#define LAMBERT 1
 
 void main()
 {
@@ -63,5 +108,37 @@ void main()
 
     // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
     texcoords = texture_coefficients;
+
+    if(shading_model == GOURAUD){
+    vec3 final_color_rgb;
+        
+        vec4 camera_position = inverse(view) * vec4(0.0, 0.0, 0.0, 1.0);
+        vec4 p = position_world;
+        vec4 n = normalize(normal); 
+        vec4 l = normalize(vec4(-0.5, 1.0, -0.5, 0.0));
+        vec4 v = normalize(camera_position - p);
+        vec4 h = normalize(v + l);
+
+        vec3 I = vec3(0.2, 0.2, 0.2);
+        vec3 Ia = vec3(0.2, 0.2, 0.2);
+        vec3 Kd0;
+
+        if (u_has_texture > 0) {
+            Kd0 = material_Kd * texture(TextureImage0, texcoords).rgb;
+        } else {
+            Kd0 = material_Kd;
+        }
+
+        vec3 lambert_term = I * max(0, dot(n, l));
+        vec3 ambient_term = material_Ka * Ia;
+        vec3 blinn_phong_specular_term = material_Ks * I * pow(max(0.0, dot(n.xyz, h.xyz)), material_q);
+
+        final_color_rgb = Kd0 * lambert_term + ambient_term + blinn_phong_specular_term;
+
+        gouraud_color = pow(final_color_rgb, vec3(1.0)/2.2);
+    }
+    else if(shading_model == PHONG){
+        gouraud_color = vec3(0.0, 0.0, 0.0);
+    }
 }
 
