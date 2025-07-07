@@ -236,7 +236,9 @@ GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
 GLint g_has_texture_uniform;
 GLint g_shading_model_uniform;
-
+GLint g_point_light_pos_uniform;
+GLint g_point_light_color_uniform;
+GLint g_point_light_active_uniform;
 // SKYBOX SHADERS VAR
 GLuint g_GpuProgramSkyboxID = 0;
 GLint g_skybox_model_uniform;
@@ -254,7 +256,8 @@ bool mouse_move = false;
 bool paused = false;
 bool first_person_view = true;
 float gravity = 9.8f;
-
+bool g_muzzleFlashActive = false;
+float g_muzzleFlashTimer = 0.0f;
 
 
 int main(int argc, char *argv[])
@@ -568,6 +571,14 @@ int main(int argc, char *argv[])
         Leon.view_frente = Leon.view_frente / norm(Leon.view_frente); // Normalizamos o vetor "view_frente"
         glm::vec4 timenowvec = glm::vec4(timenow, timenow, timenow, 0.0f);
         double timedif = timenowvec.x - timeprevec.x;
+        if (g_muzzleFlashActive)
+        {
+            g_muzzleFlashTimer -= timedif;
+            if (g_muzzleFlashTimer <= 0.0f)
+            {
+                g_muzzleFlashActive = false;
+            }
+        }
         if (!paused)
         {
             if(g_LeftMouseButtonPressed && Leon.shooting == false && shootinganim <= 0.1f && Leon.reloading == false){
@@ -584,6 +595,8 @@ int main(int argc, char *argv[])
                     }
                     Leon.shooting = true;
                 }
+                g_muzzleFlashActive = true;
+                g_muzzleFlashTimer = 0.1f;
             }
             if(Leon.shooting == true){
                 shootinganim += 20*timedif;
@@ -822,6 +835,17 @@ int main(int argc, char *argv[])
               * Matrix_Rotate_X(-shootinganim + reloadinganim);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             DrawVirtualObjectMtl(gundraw, sizeof(gundraw), &gunmodel, gun_textures, GUN);
+        }
+        glUniform1i(g_point_light_active_uniform, g_muzzleFlashActive);
+        if (g_muzzleFlashActive)
+        {
+            // Posição da luz: um pouco à frente da câmera.
+            // Isso é uma aproximação. O ideal seria calcular a posição exata da ponta da arma.
+            glm::vec4 light_pos_world = Leon.position + glm::vec4(0.0f, 2.5f, 0.0f, 0.0f);
+            glUniform3f(g_point_light_pos_uniform, light_pos_world.x, light_pos_world.y, light_pos_world.z);
+
+            // Cor da luz: um amarelo/laranja forte
+            glUniform3f(g_point_light_color_uniform, 1.0f, 0.7f, 0.7f);
         }
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
@@ -1074,6 +1098,9 @@ void LoadShadersFromFiles()
     g_bbox_max_uniform = glGetUniformLocation(g_GpuProgramID, "bbox_max");
     g_has_texture_uniform = glGetUniformLocation(g_GpuProgramID, "u_has_texture");
     g_shading_model_uniform = glGetUniformLocation(g_GpuProgramID, "shading_model");
+    g_point_light_pos_uniform = glGetUniformLocation(g_GpuProgramID, "u_point_light_pos");
+    g_point_light_color_uniform = glGetUniformLocation(g_GpuProgramID, "u_point_light_color");
+    g_point_light_active_uniform = glGetUniformLocation(g_GpuProgramID, "u_point_light_active");
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(g_GpuProgramID);

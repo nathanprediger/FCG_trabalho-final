@@ -55,7 +55,9 @@ uniform vec3 material_Ks;
 uniform float material_q;
 uniform float material_opacity;
 uniform int u_has_texture; 
-
+uniform vec3 u_point_light_pos;   // Posição da luz do disparo no mundo
+uniform vec3 u_point_light_color; // Cor da luz do disparo
+uniform bool u_point_light_active;  // Se a luz está ativa ou não
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -234,12 +236,27 @@ void main()
         vec3 blinn_phong_specular_term = Ks*I*pow(max(0.0, dot(n.xyz,h.xyz)), q);
 
     // if(dot(w.xyz,(normalize(p-Lp)).xyz)>=cos(radians(30.0))){
-            if(illumination_type == LAMBERT){
+        if(illumination_type == LAMBERT){
             color.rgb = Kd0 * lambert + ambient_term;
-            }
-            else if (illumination_type == BLINN_PHONG) {
+        }
+        else if (illumination_type == BLINN_PHONG) {
             color.rgb = Kd0 * (lambert) + ambient_term + blinn_phong_specular_term;
-            }
+        }
+        if (u_point_light_active)
+        {
+            vec3 p_point = u_point_light_pos;
+            vec3 l_point = normalize(p_point - p.xyz); // Vetor da luz do disparo
+            vec3 h_point = normalize(v.xyz + l_point); // Vetor H para a luz do disparo
+
+            // Atenuação da luz com a distância para um efeito mais realista
+            float distance = length(p_point - p.xyz);
+            float attenuation = 1.0 / (0.1*distance + 0.05*distance*distance);
+
+            vec3 point_diffuse = Kd0 * u_point_light_color * max(0.0, dot(n.xyz, l_point)) * attenuation;
+            vec3 point_specular = Ks * u_point_light_color * pow(max(0.0, dot(n.xyz, h_point)), q) * attenuation;
+
+            color.rgb += point_diffuse + point_specular;
+        }
         //}
         //else
         //    color.rgb = Kd0 * (lambert + vec3(0.005)) + ambient_term;

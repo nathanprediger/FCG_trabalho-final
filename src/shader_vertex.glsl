@@ -44,6 +44,11 @@ uniform vec3 material_Kd;
 uniform vec3 material_Ks;
 uniform float material_q;
 uniform int u_has_texture;
+
+uniform vec3 u_point_light_pos;   // Posição da luz do disparo no mundo
+uniform vec3 u_point_light_color; // Cor da luz do disparo
+uniform bool u_point_light_active;  // Se a luz está ativa ou não
+
 vec4 color;
 // Object IDs
 #define SPHERE 0
@@ -135,6 +140,20 @@ void main()
 
         final_color_rgb = Kd0 * lambert_term + ambient_term + blinn_phong_specular_term;
 
+        if (u_point_light_active)
+        {
+            vec3 p_point = u_point_light_pos;
+            vec3 l_point = normalize(p_point - p.xyz); // Vetor da luz do disparo
+            vec3 h_point = normalize(v.xyz + l_point); // Vetor H para a luz do disparo
+
+            float distance = length(p_point - p.xyz);
+            float attenuation = 1.0 / (1.0 + 0.1*distance + 0.05*distance*distance);
+
+            vec3 point_diffuse = Kd0 * u_point_light_color * max(0.0, dot(n.xyz, l_point)) * attenuation;
+            vec3 point_specular = material_Ks * u_point_light_color * pow(max(0.0, dot(n.xyz, h_point)), material_q) * attenuation;
+
+            final_color_rgb += point_diffuse + point_specular;
+        }
         gouraud_color = pow(final_color_rgb, vec3(1.0)/2.2);
     }
     else if(shading_model == PHONG){
