@@ -152,6 +152,8 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow *window, glm::mat4 M,
 void TextRendering_ShowModelViewProjection(GLFWwindow *window, glm::mat4 projection, glm::mat4 view, glm::mat4 model, glm::vec4 p_model);
 void TextRendering_ShowEulerAngles(GLFWwindow *window);
 void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstamina);
+void TextRendering_ShowAmmo(GLFWwindow *window, int ammo, int maxammo);
+void TextRendering_Crosshair(GLFWwindow *window);
 void TextRendering_ShowProjection(GLFWwindow *window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow *window);
 
@@ -855,7 +857,7 @@ int main(int argc, char *argv[])
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             DrawVirtualObjectMtl(gundraw, sizeof(gundraw), &gunmodel, gun_textures, GUN);
         }
-        glUniform1i(g_point_light_active_uniform, g_muzzleFlashActive);
+        glUniform1i(g_point_light_active_uniform, g_muzzleFlashActive&&Leon.shooting==true);
         if (g_muzzleFlashActive)
         {
             // Posição da luz: um pouco à frente da câmera.
@@ -870,7 +872,10 @@ int main(int argc, char *argv[])
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
         TextRendering_ShowStamina(window, Leon.stamina, Leon.staminamax);
-
+        TextRendering_ShowAmmo(window, Leon.ammo, 7);
+        if(first_person_view == true){
+            TextRendering_Crosshair(window);
+        }
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
         TextRendering_ShowProjection(window);
 
@@ -2098,4 +2103,27 @@ void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstami
     snprintf(buffer, 80, "Stamina: %.2f/%.2f\n", stamina, maxstamina);
 
     TextRendering_PrintString(window, buffer, -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
+}
+
+void TextRendering_ShowAmmo(GLFWwindow *window, int ammo, int maxammo){
+    if (!g_ShowInfoText)
+        return;
+
+    float pad = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+
+    char buffer[80];
+    snprintf(buffer, 80, "Ammo: %d/%d\n", ammo, maxammo);
+
+    TextRendering_PrintString(window, buffer, -1.0f + 25*charwidth, -1.0f + 2 * pad / 10, 1.0f);
+}
+
+void TextRendering_Crosshair(GLFWwindow *window){
+    float scale = 1.5f; 
+    
+    float char_width = TextRendering_CharWidth(window) * scale;
+    float char_height = TextRendering_LineHeight(window) * scale;
+            
+    
+    TextRendering_PrintString(window, "+", -char_width / 2.0f, -char_height / 2.0f, scale);
 }
