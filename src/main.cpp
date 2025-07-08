@@ -291,7 +291,7 @@ int main(int argc, char *argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow *window;
-    window = glfwCreateWindow(800, 600, "INF01047 - Seu Cartao - Seu Nome", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Resident Evil -1", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -444,6 +444,8 @@ int main(int argc, char *argv[])
     #define Z_MIN 5 
     #define Z_MAX 48
 
+    
+    
     // ENEMIES CREATION
     #define HP 5.0f
     #define SPEED 2.0f

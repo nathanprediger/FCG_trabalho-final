@@ -1,5 +1,13 @@
 #include "player.h"
+#include "collisions.h"
 
+#define MAP_LENGTH 100
+Plane boundaries[4] = {
+        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, -MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MIN
+        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MAX
+        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(-MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)), // Plane YZ at X_MIN
+        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)) // Plane YZ at X_MAX
+    };
 #define MAP_MAX 49.5f
 #define RUNNING_SPEED 3.0f
 Player::Player(glm::vec4 pos, glm::vec4 dir, float spd, float hp, Cube box)
@@ -20,6 +28,7 @@ void Player::updatePosition(float gravity, glm::vec4 diff_time) {
 void Player::move(glm::vec4 diff_time, char direction, float gravity) {
     float speed_multiplier = 1.0f;
     if(running) speed_multiplier = RUNNING_SPEED;
+    glm::vec4 deslocar_anterior = deslocar;
     switch (direction){
         case 'F': deslocar -= speed * speed_multiplier * view_frente * diff_time; break;
         case 'B': deslocar += speed * speed_multiplier * view_frente * diff_time; break;
@@ -27,16 +36,12 @@ void Player::move(glm::vec4 diff_time, char direction, float gravity) {
         case 'R': deslocar += speed * speed_multiplier * view_lado * diff_time; break;
         default: break;
     }
-    if(deslocar.x >= MAP_MAX)
-        deslocar.x = MAP_MAX;
-    else if(deslocar.x <= -MAP_MAX)
-        deslocar.x = -MAP_MAX;
-    if(deslocar.z >= MAP_MAX)
-        deslocar.z = MAP_MAX;
-    else if(deslocar.z <= -MAP_MAX)
-        deslocar.z = -MAP_MAX;
-
-    
+    Cube hitbox = Cube(glm::vec3(boundingBox.max.x + deslocar.x, boundingBox.max.y + deslocar.y, boundingBox.max.z + deslocar.z),
+                       glm::vec3(boundingBox.min.x + deslocar.x, boundingBox.min.y + deslocar.y, boundingBox.min.z + deslocar.z));
+    if(hitbox.colideWithPlane(boundaries[0]) || hitbox.colideWithPlane(boundaries[1]) ||
+       hitbox.colideWithPlane(boundaries[2]) || hitbox.colideWithPlane(boundaries[3])) {
+        deslocar = deslocar_anterior; 
+    }  
 }
 void Player::takeDamage(float damage){
     if (alive) {
