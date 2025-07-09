@@ -1,6 +1,6 @@
 #include <glm/vec4.hpp>
 #include <cmath>
-
+#include <stdlib.h>
 typedef struct bezier_curve_pair{
     glm::vec4 points[4]; // pontos da curva
     double arcsize; // para ter aproximadamente uma velocidade constante ao longo da curva

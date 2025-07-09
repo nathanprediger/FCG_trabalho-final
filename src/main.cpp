@@ -181,6 +181,7 @@ struct SceneObject
 
 // Novas Funcoes
 double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point);
+Bezier_path *generateRandomBezierPath(glm::vec4 start, int num_curves);
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
 
 // A cena virtual é uma lista de objetos nomeados, guardados em um dicionário
@@ -355,7 +356,7 @@ int main(int argc, char *argv[])
     ObjModel spheremodel("../../data/skyboxes/sphere.obj");
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
-    // Changed to leon with no weapon to test it
+    
     ObjModel leonmodel("../../data/leon/JD3L9JZFR7UB7NMGULPCJC51T.obj");
     ComputeNormals(&leonmodel);
     BuildTrianglesAndAddToVirtualScene(&leonmodel);
@@ -519,6 +520,37 @@ int main(int argc, char *argv[])
     struct Player Leon(INITIAL_POS, INITIAL_VIEW, LEON_SPEED, LEON_HP, HUMANOIDBOX);
     double shootinganim = 0.0f;
     double reloadinganim = 0.0f;
+
+    // BUNNY CREATION
+    #define BUNNY_BOUNDING_BOX Sphere(glm::vec3(0.0f, 0.0f, 0.0f), 0.5f);
+    #define NUM_BUNNIES 5
+    
+    std::vector<std::pair<float,float>> bunny_positions;
+    for(int i = 0; i < NUM_BUNNIES; i++)
+    {
+        float posx = 0;
+        float posz = 0;
+        int j = 0;
+        do{
+            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+            j++;
+        }while(map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] != 0); // Verifica se a posição já está ocupada por outro objeto
+
+        for(int x = -3; x <= 3; x++)
+        {
+            for(int z = -3; z <= 3; z++){
+                if(x != 0 || z != 0){
+                    int arr_posx = (int)posx + MAP_LENGTH/2 + x;
+                    int arr_posz = (int)posz + MAP_LENGTH/2 + z;
+                    if(arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
+                        map_ocupation[(int)(posx + MAP_LENGTH/2) + x][(int)(posz + MAP_LENGTH/2) + z] = 1; // Marca as posições ao redor como ocupadas
+                }
+            }
+        }
+        bunny_positions.push_back(std::make_pair(posx, posz)); 
+    }
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -2093,6 +2125,32 @@ double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point)
         return 0.0f;
     }
     return atan2(dir_vec.x, dir_vec.z);
+}
+
+#define MAX_CURVES 3
+
+Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, int min_distance_points)
+{   
+    Bezier_path *path = new Bezier_path();
+    unsigned seed = time(0);
+    srand(seed);
+    glm::vec4 curves[MAX_CURVES][4];
+    for(int i = 0; i < MAX_CURVES; i++){
+        if(i == 0){
+            curves[i][0] = start;
+            curves[i][1] = start + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
+            curves[i][2] = curves[i][1] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
+            curves[i][3] = curves[i][2] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
+            Bezier_curve curve = define_cubic_bezier(curves[i]);
+            path = create_path(curve);
+        }
+        else{
+            curves[i][0] = curves[i-1][3] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
+            curves[i][1] = curves[i][0] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
+            path = link_curve_to_path(path, curves[i]);
+        }
+    }
+    return path;
 }
 
 void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstamina){
