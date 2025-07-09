@@ -182,6 +182,9 @@ void TextRendering_ShowAmmo(GLFWwindow *window, int ammo, int maxammo);
 void TextRendering_Crosshair(GLFWwindow *window);
 void TextRendering_ShowProjection(GLFWwindow *window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow *window);
+void TextRendering_ShowTimer(GLFWwindow *window);
+void TextRendering_ShowStartObjective(GLFWwindow *window);
+void TextRendering_ShowObjectiveProgress(GLFWwindow *window, int coelhinhos);
 
 // Funções callback para comunicação com o sistema operacional e interação do
 // usuário. Veja mais comentários nas definições das mesmas, abaixo.
@@ -283,6 +286,7 @@ bool first_person_view = true;
 float gravity = 9.8f;
 bool g_muzzleFlashActive = false;
 float g_muzzleFlashTimer = 0.0f;
+double sensitivity = 0.5f;
 
 Plane boundaries[4] = {
         Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, -MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MIN
@@ -442,7 +446,6 @@ int main(int argc, char *argv[])
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    int sense = 50;
     bool lastpaused = paused;
     int amountbunniestaken = 0;
     double timeprev = glfwGetTime();
@@ -882,6 +885,11 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
         // por segundo (frames per second).
         TextRendering_ShowFramesPerSecond(window);
 
+        TextRendering_ShowTimer(window);
+        if(glfwGetTime() < 5.0f)
+            TextRendering_ShowStartObjective(window);
+        else
+            TextRendering_ShowObjectiveProgress(window, amountbunniestaken);
         // O framebuffer onde OpenGL executa as operações de renderização não
         // é o mesmo que está sendo mostrado para o usuário, caso contrário
         // seria possível ver artefatos conhecidos como "screen tearing". A
@@ -1616,8 +1624,8 @@ void CursorPosCallback(GLFWwindow *window, double xpos, double ypos)
         float dy = ypos - g_LastCursorPosY;
 
         // Atualizamos parâmetros da câmera com os deslocamentos
-        g_CameraTheta -= 0.005f * dx;
-        g_CameraPhi += 0.005f * dy;
+        g_CameraTheta -= 0.005f * dx* sensitivity;
+        g_CameraPhi += 0.005f * dy * sensitivity;
 
         // Em coordenadas esféricas, o ângulo phi deve ficar entre -pi/2 e +pi/2.
         float phimax = 3.141592f / 2;
@@ -2105,6 +2113,42 @@ void TextRendering_Crosshair(GLFWwindow *window)
     TextRendering_PrintString(window, "+", -char_width / 2.0f, -char_height / 2.0f, scale);
 }
 
+void TextRendering_ShowTimer(GLFWwindow *window){
+
+    if (!g_ShowInfoText)
+        return;
+
+    float charwidth = TextRendering_CharWidth(window);
+    float pad = TextRendering_LineHeight(window);
+    char buffer[50];
+    snprintf(buffer, 50, "Tempo decorrido: %.2f\n", glfwGetTime());
+    TextRendering_PrintString(window, buffer, 0.0f - (double)strlen(buffer)*charwidth/2, 1.0f - pad, 1.0f);
+
+}
+
+void TextRendering_ShowStartObjective(GLFWwindow *window){
+
+    if (!g_ShowInfoText)
+        return;
+
+    float scale = 2.50f;
+    float charwidth = TextRendering_CharWidth(window)*scale;
+    float pad = TextRendering_LineHeight(window)*scale;
+    char buffer[30];
+    snprintf(buffer, 30, "Colete todos os coelinhos\n", glfwGetTime());
+    TextRendering_PrintString(window, buffer, -(double)strlen(buffer)*charwidth/2, -pad/2, scale);
+}
+
+void TextRendering_ShowObjectiveProgress(GLFWwindow *window, int coelhinhos){
+    if (!g_ShowInfoText)
+    return;
+
+    float charwidth = TextRendering_CharWidth(window);
+    float pad = TextRendering_LineHeight(window);
+    char buffer[30];
+    snprintf(buffer, 30, "Coelinhos %d/%d\n", coelhinhos, NUM_BUNNIES);
+    TextRendering_PrintString(window, buffer, -1.0f,1.0f - pad);
+}
 std::vector<Enemie> generateEnemies(int map_occupation[MAP_LENGTH][MAP_LENGTH]){
     #define HP 5.0f
     #define SPEED 2.0f
