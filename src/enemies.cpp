@@ -14,6 +14,8 @@ void Enemie::move(float delta_time)
         else{
             prev_position = position;
             position = move_along_bezier_path(cur_path, &time, speed, delta_time);
+            direction = position - prev_position;
+            setAng();
             if(boundingBox.colideWithPlane(boundaries[0], glm::vec3(position.x, position.y, position.z)) || 
                boundingBox.colideWithPlane(boundaries[1], glm::vec3(position.x, position.y, position.z)) ||
                boundingBox.colideWithPlane(boundaries[2], glm::vec3(position.x, position.y, position.z)) ||
@@ -21,7 +23,6 @@ void Enemie::move(float delta_time)
             {
                 
                 position = prev_position;
-
             
                 clear_path(cur_path);
 
@@ -55,6 +56,7 @@ void Enemie::set_aggressive(bool agro)
 void Enemie::aggressive_direction(glm::vec4 player_pos)
 {
     direction = aggressive ? normalize(player_pos - position) : direction;
+    setAng();
 }
 
 void Enemie::player_spot(glm::vec4 player_pos){
@@ -72,4 +74,12 @@ void Enemie::player_spot(glm::vec4 player_pos){
             set_aggressive(true);
     }
     
+}
+
+void Enemie::setAng(){
+    if(glm::length(direction) > 0.0f)
+        ang = atan2(direction.x, direction.z);
+    else
+        ang = 0.0f;
+
 }

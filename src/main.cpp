@@ -15,6 +15,7 @@
 //  vira
 //    #include <cstdio> // Em C++
 //
+#define MINIAUDIO_IMPLEMENTATION
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -55,6 +56,7 @@
 #include "enemies.h"
 #include "bezier.h"
 #include "player.h"
+#include "miniaudio.h"
 
 #define BUNNYBOX Sphere(glm::vec3(0.0f, 0.0f, 0.0f), 0.8f);
 #define HUMANOIDBOX Cube(glm::vec3(0.35f, 2.0f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
@@ -68,6 +70,7 @@
 #define NUM_TREES 30
 #define LEON_SPEED 2.0f
 #define LEON_HP 10.0f
+#define LEON_AMMO 7
 #define INITIAL_POS glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)  // Posição inicial do Leon
 #define INITIAL_VIEW glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) // Vetor de visão inicial do Leon
 #define NUM_BUNNIES 5
@@ -299,6 +302,30 @@ int main(int argc, char *argv[])
 
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
     // sistema operacional, onde poderemos renderizar com OpenGL.
+    ma_result result;
+    ma_engine engine;
+    result = ma_engine_init(NULL, &engine);
+    if (result != MA_SUCCESS)
+    {
+        printf("Erro no miniaudio\n");
+        std::exit(EXIT_FAILURE);
+    }
+    ma_sound deagleshot[LEON_AMMO];
+    ma_sound deaglereload;
+    for(int i = 0; i < LEON_AMMO; i++){
+        result = ma_sound_init_from_file(&engine, "../../data/audios/deagleshoot.mp3", 0, NULL, NULL, &deagleshot[i]);
+        if (result != MA_SUCCESS)
+        {
+            printf("Erro no miniaudio\n");
+            std::exit(EXIT_FAILURE);
+        }
+    }
+    result = ma_sound_init_from_file(&engine, "../../data/audios/deaglereload.mp3", 0, NULL, NULL, &deaglereload);
+    if (result != MA_SUCCESS)
+    {
+        printf("Erro no miniaudio\n");
+        std::exit(EXIT_FAILURE);
+    }
     int success = glfwInit();
     if (!success)
     {
@@ -451,6 +478,8 @@ int main(int argc, char *argv[])
     double timeprev = glfwGetTime();
     glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
 
+
+
     //generating random object positions
 int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
 
@@ -532,8 +561,10 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
         {
             if (g_LeftMouseButtonPressed && !Leon.shooting && shootinganim <= 0.1f && !Leon.reloading)
             {
-                if (Leon.ammo == 0)
+                if (Leon.ammo == 0){
                     Leon.reloading = true;
+                    ma_sound_start(&deaglereload);
+                }
                 else
                 {
                     glm::vec4 shotdir = Leon.direction;
@@ -546,6 +577,7 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
                                 enemies[i].alive = false;
                         }
                     }
+                    ma_sound_start(&deagleshot[Leon.ammo]);
                     Leon.shooting = true;
                     g_LeftMouseButtonPressed = false;
                 }
@@ -766,14 +798,14 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
                 if (enemies[i].type == 'F')
                 {
                     // FEMALE ZOMBIE
-                    model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(enemies[i].direction.x, enemies[i].direction.z));
+                    model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(enemies[i].ang);
                     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                     DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
                 }
                 else if (enemies[i].type == 'M')
                 {
                     // MALE ZOMBIE
-                    model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(enemies[i].direction.x, enemies[i].direction.z));
+                    model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(enemies[i].ang);
                     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                     DrawVirtualObjectMtl(zomb, sizeof(zomb), &malezombiemodel, malezombie_textures, MALEZOMBIE);
                 }

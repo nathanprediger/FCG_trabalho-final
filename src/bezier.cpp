@@ -163,10 +163,7 @@ double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point)
 {
     glm::vec3 dir_vec = (cur_point - prev_point);
     if (glm::length(dir_vec) > 0.0f)
-    {
-        double angle = dot(dir_vec, glm::vec3(0.0f, 0.0f, 1.0f));
         return atan2(dir_vec.x, dir_vec.z);
-    }
     else
         return 0.0f;
 }

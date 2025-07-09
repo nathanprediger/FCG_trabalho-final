@@ -34,4 +34,6 @@ struct Enemie {
     void set_aggressive(bool agro);
 
     void player_spot(glm::vec4 player_pos);
+
+    void setAng();
 };
