@@ -23,6 +23,7 @@ struct Sphere {
 
     Sphere(const glm::vec3& c, float r);
 
+    bool colideWithPlane(const Plane& plane, glm::vec3 cur_pos) const;
     bool colideWithPoint(const glm::vec3 deslocamentocentro, glm::vec3 ponto) const;
 };
 

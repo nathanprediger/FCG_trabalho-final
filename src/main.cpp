@@ -59,6 +59,7 @@
 #define BUNNYBOX Sphere(glm::vec3(0.0f, 0.0f, 0.0f), 0.8f);
 #define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.8f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
 #define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f, 0.0f, -0.6f))
+#define MAX_CURVES 3
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -442,7 +443,13 @@ int main(int argc, char *argv[])
     coelhito_path = link_curve_to_path(coelhito_path, b_points4);*/
 
 #define MAP_LENGTH 100
-    int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
+int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
+Plane boundaries[4] = {
+        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, -MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MIN
+        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MAX
+        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(-MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)), // Plane YZ at X_MIN
+        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)) // Plane YZ at X_MAX
+ };
 // OBJECT CREATION
 #define X_MIN 5
 #define X_MAX 48
@@ -532,7 +539,7 @@ int main(int argc, char *argv[])
     double reloadinganim = 0.0f;
 
 // BUNNY CREATION
-#define NUM_BUNNIES 5
+#define NUM_BUNNIES 30
 #define BUNNY_MAX_SPEED 800
 
     std::vector<Bunny> bunnies;
@@ -826,6 +833,7 @@ int main(int argc, char *argv[])
 #define HOUSE 10
 #define FENCE 11
 
+
         glUniform1i(g_shading_model_uniform, PHONG);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
@@ -846,6 +854,24 @@ int main(int argc, char *argv[])
                 {
                     bunnies[i].prev_position = bunnies[i].cur_position;
                     bunnies[i].cur_position = move_along_bezier_path(bunnies[i].bunny_path, &(bunnies[i].bunny_time), bunnies[i].bunny_speed, timedif);
+                    glm::vec3 bunny_pos = glm::vec3(bunnies[i].cur_position.x, bunnies[i].cur_position.y, bunnies[i].cur_position.z);
+                    if(bunny_BBOX.colideWithPlane(boundaries[0], bunny_pos) || bunny_BBOX.colideWithPlane(boundaries[1], bunny_pos) ||
+                       bunny_BBOX.colideWithPlane(boundaries[2], bunny_pos) || bunny_BBOX.colideWithPlane(boundaries[3], bunny_pos))
+                    {
+                        // Colisão detectada!
+                        // 1. Reverte a posição do coelho para a última localização segura.
+                        bunnies[i].cur_position = bunnies[i].prev_position;
+
+                        // 2. Limpa a trajetória antiga para evitar vazamento de memória.
+                        clear_path(bunnies[i].bunny_path);
+
+                        // 3. Gera uma nova trajetória aleatória a partir da posição atual.
+                        bunnies[i].bunny_path = generateRandomBezierPath(bunnies[i].cur_position, 3, -3);
+
+                        // 4. Reinicia o parâmetro de tempo para a nova trajetória.
+                        bunnies[i].bunny_time = 0.0f;
+                    }
+                    
                 }
                 bunnies[i].ang = direction_angle(bunnies[i].prev_position, bunnies[i].cur_position);
                 model = Matrix_Translate(bunnies[i].cur_position.x, 0.3f, bunnies[i].cur_position.z) *Matrix_Scale(0.3f, 0.3f, 0.3f) * Matrix_Rotate_Y(bunnies[i].ang + M_PI / 2);

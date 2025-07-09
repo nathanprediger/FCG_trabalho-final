@@ -4,6 +4,17 @@ Plane::Plane(const glm::vec3 &n, const glm::vec3 &p) : normal(n), point(p) {}
 
 Sphere::Sphere(const glm::vec3 &c, float r) : center(c), radius(r) {}
 
+bool Sphere::colideWithPlane(const Plane &plane, glm::vec3 cur_pos) const
+{
+
+    float d = glm::dot(plane.normal, (center+cur_pos) - plane.point);
+    float r = radius * glm::length(plane.normal);
+    if (d < 0.0f) d = -d; 
+    if (d <= r) return true; 
+
+    return false;
+}
+
 bool Sphere::colideWithPoint(const glm::vec3 deslocamentocentro, glm::vec3 ponto) const
 {
     return glm::length(ponto - (center + deslocamentocentro)) <= radius;
