@@ -8,9 +8,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include "collisions.h"
-
+#include "bezier.h"
 struct Enemie {
+    Bezier_path* cur_path;
     glm::vec4 position;
+    glm::vec4 prev_position;
+    double time = 0.0f;
+    float ang;
     glm::vec4 direction;
     float speed;
     float health;

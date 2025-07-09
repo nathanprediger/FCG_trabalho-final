@@ -284,6 +284,12 @@ float gravity = 9.8f;
 bool g_muzzleFlashActive = false;
 float g_muzzleFlashTimer = 0.0f;
 
+Plane boundaries[4] = {
+        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, -MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MIN
+        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MAX
+        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(-MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)), // Plane YZ at X_MIN
+        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)) // Plane YZ at X_MAX
+ };
 int main(int argc, char *argv[])
 {
 
@@ -444,12 +450,7 @@ int main(int argc, char *argv[])
 
     //generating random object positions
 int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
-Plane boundaries[4] = {
-        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, -MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MIN
-        Plane(glm::vec4(0.0f, 0.0f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, MAP_LENGTH/2, 1.0f)), // Plane XZ at Z_MAX
-        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(-MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)), // Plane YZ at X_MIN
-        Plane(glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec4(MAP_LENGTH/2, 0.0f, 0.0f, 1.0f)) // Plane YZ at X_MAX
- };
+
     std::vector<Enemie> enemies = generateEnemies(map_ocupation);
     std::vector<std::pair<float, float>> tree_positions = generateTrees(map_ocupation);
     std::vector<Bunny> bunnies = generateBunnies(map_ocupation);
@@ -459,54 +460,6 @@ Plane boundaries[4] = {
     double shootinganim = 0.0f;
     double reloadinganim = 0.0f;
 
-// BUNNY CREATION
-#define NUM_BUNNIES 30
-#define BUNNY_MAX_SPEED 800
-
-    std::vector<Bunny> bunnies;
-    for (int i = 0; i < NUM_BUNNIES; i++)
-    {
-        float posx = 0;
-        float posz = 0;
-        int j = 0;
-        do
-        {
-            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
-            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
-            j++;
-        } while (map_ocupation[(int)(posx + MAP_LENGTH / 2)][(int)(posz + MAP_LENGTH / 2)] != 0); // Verifica se a posição já está ocupada por outro objeto
-
-        for (int x = -3; x <= 3; x++)
-        {
-            for (int z = -3; z <= 3; z++)
-            {
-                if (x != 0 || z != 0)
-                {
-                    int arr_posx = (int)posx + MAP_LENGTH / 2 + x;
-                    int arr_posz = (int)posz + MAP_LENGTH / 2 + z;
-                    if (arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
-                        map_ocupation[(int)(posx + MAP_LENGTH / 2) + x][(int)(posz + MAP_LENGTH / 2) + z] = 1; // Marca as posições ao redor como ocupadas
-                }
-            }
-        }
-        Bunny cur_bunny;
-        cur_bunny.taken = false;
-        cur_bunny.cur_position = glm::vec4(posx, 0.0f, posz, 1.0f);
-        cur_bunny.bunny_path = generateRandomBezierPath(cur_bunny.cur_position, 3, -3);
-        /*Bezier_path* teste = cur_bunny.bunny_path;
-        while(teste->next_curve != NULL){
-            printf("Coelho %d: Ponto 0 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[0].x), (teste->cur_curve.points[0].z));
-            printf("Coelho %d: Ponto 1 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[1].x), (teste->cur_curve.points[1].z));
-            printf("Coelho %d: Ponto 2 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[2].x), (teste->cur_curve.points[2].z));
-            printf("Coelho %d: Ponto 3 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[3].x), (teste->cur_curve.points[3].z));
-            teste = teste->next_curve;
-        }*/
-        cur_bunny.prev_position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        cur_bunny.bunny_time = 0.0f;
-        cur_bunny.ang = 0.0f;
-        cur_bunny.bunny_speed = (1 + rand() % BUNNY_MAX_SPEED) / 100.0f;
-        bunnies.push_back(cur_bunny);
-    }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
@@ -2189,6 +2142,11 @@ std::vector<Enemie> generateEnemies(int map_occupation[MAP_LENGTH][MAP_LENGTH]){
         {
             enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX));
         }
+        enemies[i].cur_path = generateRandomBezierPath(enemies[i].position, 3, -3);
+        enemies[i].prev_position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        enemies[i].time = 0.0f;
+        enemies[i].ang = 0.0;
+
     }
     return enemies;
 }

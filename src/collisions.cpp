@@ -27,11 +27,11 @@ bool Cube::colideWithCube(const Cube &other, glm::vec4 pos_1, glm::vec4 pos_2) c
            (max.y + pos_1.y>= other.min.y + pos_2.y && min.y + pos_1.y <= other.max.y + pos_2.y) &&
            (max.z + pos_1.z >= other.min.z + pos_2.z && min.z + pos_1.z <= other.max.z + pos_2.z);
 }
-bool Cube::colideWithPlane(const Plane &Plane)
+bool Cube::colideWithPlane(const Plane &Plane, glm::vec3 cur_pos)const
 {
     glm::vec3 center = (max + min) / 2.0f;
     glm::vec3 extents = (max - min) / 2.0f;
-    float d = glm::dot(Plane.normal, center - Plane.point);
+    float d = glm::dot(Plane.normal, (center+cur_pos) - Plane.point);
     float r = glm::dot(glm::abs(Plane.normal), extents);
     return std::abs(d) <= r;
 }
