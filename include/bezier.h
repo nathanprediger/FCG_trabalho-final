@@ -20,3 +20,4 @@ Bezier_path* create_path(Bezier_curve curva);
 void clear_path(Bezier_path* path);
 glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif);
 Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, int min_distance_points);
+double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point);
