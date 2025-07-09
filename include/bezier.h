@@ -9,7 +9,6 @@ typedef struct bezier_curve_pair{
 typedef struct bez_path{
     Bezier_curve cur_curve; // curva atual
     struct bez_path* next_curve; // proxima curva
-    int curve_num; // quantas curvas faltam ate o fim, contando atual
 }Bezier_path;
 
 
@@ -20,3 +19,4 @@ Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]);
 Bezier_path* create_path(Bezier_curve curva);
 void clear_path(Bezier_path* path);
 glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif);
+Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, int min_distance_points);

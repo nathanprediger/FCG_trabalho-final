@@ -56,8 +56,10 @@
 #include "bezier.h"
 #include "player.h"
 
+#define BUNNYBOX Sphere(glm::vec3(0.0f, 0.0f, 0.0f), 0.8f);
 #define HUMANOIDBOX Cube(glm::vec3(0.35f, 1.8f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
-#define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f,0.0f,-0.6f))
+#define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f, 0.0f, -0.6f))
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -116,6 +118,16 @@ struct ObjModel
     }
 };
 
+typedef struct BUNNY
+{
+    Bezier_path *bunny_path;
+    glm::vec4 cur_position;
+    glm::vec4 prev_position;
+    double bunny_time = 0.0f;
+    double bunny_speed;
+    float ang;
+    bool taken = false;
+} Bunny;
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.
 void PushMatrix(glm::mat4 M);
 void PopMatrix(glm::mat4 &M);
@@ -181,7 +193,6 @@ struct SceneObject
 
 // Novas Funcoes
 double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point);
-Bezier_path *generateRandomBezierPath(glm::vec4 start, int num_curves);
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
 
 // A cena virtual é uma lista de objetos nomeados, guardados em um dicionário
@@ -261,10 +272,11 @@ bool first_person_view = true;
 float gravity = 9.8f;
 bool g_muzzleFlashActive = false;
 float g_muzzleFlashTimer = 0.0f;
-
+int amountbunniestaken = 0;
 
 int main(int argc, char *argv[])
 {
+
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
     // sistema operacional, onde poderemos renderizar com OpenGL.
     int success = glfwInit();
@@ -273,7 +285,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "ERROR: glfwInit() failed.\n");
         std::exit(EXIT_FAILURE);
     }
-
+    unsigned seed = time(0);
+    srand(seed);
     // Definimos o callback para impressão de erros da GLFW no terminal
     glfwSetErrorCallback(ErrorCallback);
 
@@ -338,10 +351,10 @@ int main(int argc, char *argv[])
     LoadShadersFromFiles();
 
     // Carregamos duas imagens para serem utilizadas como textura
-    GLuint earth_id = LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);            // TextureImage0
-    GLuint earth_night_id = LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0); // TextureImage1
-    GLuint rocky_terrain_id = LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1);   // TextureImage2
-    GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0); // TextureImage3
+    GLuint earth_id = LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);                             // TextureImage0
+    GLuint earth_night_id = LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0);                  // TextureImage1
+    GLuint rocky_terrain_id = LoadTextureImage("../../data/rocky_terrain_02_diff_4k.jpg", 1);                    // TextureImage2
+    GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0);                  // TextureImage3
     GLuint tree_mask_id = LoadTextureImage("../../data/tree/A_5e6233bf8b6646988a1a6e8dc4697172_ped-tga.png", 0); // TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -356,7 +369,7 @@ int main(int argc, char *argv[])
     ObjModel spheremodel("../../data/skyboxes/sphere.obj");
     ComputeNormals(&spheremodel);
     BuildTrianglesAndAddToVirtualScene(&spheremodel);
-    
+
     ObjModel leonmodel("../../data/leon/JD3L9JZFR7UB7NMGULPCJC51T.obj");
     ComputeNormals(&leonmodel);
     BuildTrianglesAndAddToVirtualScene(&leonmodel);
@@ -416,18 +429,9 @@ int main(int argc, char *argv[])
     int sense = 50;
     bool lastpaused = paused;
     bool jumping = false;
-    double bunnybrezt = 0;
     double timeprev = glfwGetTime();
     glm::vec4 timeprevec = glm::vec4(timeprev, timeprev, timeprev, 0.0f);
-
-    // criamos caminho do coelhito
-    glm::vec4 brez_pos = glm::vec4(5.0f, 0.0f, 5.0f, 1.0f);
-    glm::vec4 prev_brez_pos = glm::vec4(5.0f, 0.0f, 5.0f, 1.0f);
-    double ang = 1;
-    double y_vel = 0.0f;
-    float staminamax = 100.0f;
-    float stamina = staminamax;
-    glm::vec4 b_points1[4] = {glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f, 0.0f, 8.0f, 1.0f), glm::vec4(10.0f, 0.0f, 5.0f, 1.0f)};
+    /*glm::vec4 b_points1[4] = {glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(6.0f, 0.0f, 8.0f, 1.0f), glm::vec4(9.0f, 0.0f, 8.0f, 1.0f), glm::vec4(10.0f, 0.0f, 5.0f, 1.0f)};
     glm::vec4 b_points2[2] = {glm::vec4(15.0f, 0.0f, 2.0f, 1.0f), glm::vec4(18.0f, 0.0f, 6.0f, 1.0f)};
     glm::vec4 b_points3[2] = {glm::vec4(26.0f, 0.0f, 15.0f, 1.0f), glm::vec4(30.0f, 0.0f, 19.0f, 1.0f)};
     glm::vec4 b_points4[2] = {glm::vec4(-5.0f, 0.0f, -5.0f, 1.0f), glm::vec4(-6.0f, 0.0f, -8.0f, 1.0f)};
@@ -435,120 +439,145 @@ int main(int argc, char *argv[])
     Bezier_path *coelhito_path = create_path(curve1);
     coelhito_path = link_curve_to_path(coelhito_path, b_points2);
     coelhito_path = link_curve_to_path(coelhito_path, b_points3);
-    coelhito_path = link_curve_to_path(coelhito_path, b_points4);
+    coelhito_path = link_curve_to_path(coelhito_path, b_points4);*/
 
-    #define MAP_LENGTH 100
-    int map_ocupation[MAP_LENGTH][MAP_LENGTH]={0};
-    // OBJECT CREATION
-    #define X_MIN 5
-    #define X_MAX 48
-    #define Z_MIN 5 
-    #define Z_MAX 48
+#define MAP_LENGTH 100
+    int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
+// OBJECT CREATION
+#define X_MIN 5
+#define X_MAX 48
+#define Z_MIN 5
+#define Z_MAX 48
 
-    
-    
-    // ENEMIES CREATION
-    #define HP 5.0f
-    #define SPEED 2.0f
-    #define NUM_ENEMIES 15
+// ENEMIES CREATION
+#define HP 5.0f
+#define SPEED 2.0f
+#define NUM_ENEMIES 15
     struct Enemie ZF = Enemie(glm::vec4(5.0f, 0.0f, 5.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 2.0f, 5.0f, 'F', HUMANOIDBOX);
     std::vector<struct Enemie> enemies;
-    unsigned seed = time(0);
-    srand(seed);
-    for(int i = 0; i < NUM_ENEMIES; i++)
+    for (int i = 0; i < NUM_ENEMIES; i++)
     {
         float posx = 0;
         float posz = 0;
         int j = 0;
-        do{
-            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
-            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+        do
+        {
+            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
             j++;
-        }while(map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] != 0); // Verifica se a posição já está ocupada por outro objeto
-         map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] = 1; // Marca a posição como ocupada
-        for(int x = -3; x <= 3; x++){
-            for(int z = -3; z <= 3; z++){
-                if(x != 0 || z != 0){
-                    int arr_posx = (int)posx + MAP_LENGTH/2 + x;
-                    int arr_posz = (int)posz + MAP_LENGTH/2 + z;
-                    if(arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
-                        map_ocupation[(int)(posx + MAP_LENGTH/2) + x][(int)(posz + MAP_LENGTH/2) + z] = 1; // Marca as posições ao redor como ocupadas
+        } while (map_ocupation[(int)(posx + MAP_LENGTH / 2)][(int)(posz + MAP_LENGTH / 2)] != 0); // Verifica se a posição já está ocupada por outro objeto
+        map_ocupation[(int)(posx + MAP_LENGTH / 2)][(int)(posz + MAP_LENGTH / 2)] = 1; // Marca a posição como ocupada
+        for (int x = -3; x <= 3; x++)
+        {
+            for (int z = -3; z <= 3; z++)
+            {
+                if (x != 0 || z != 0)
+                {
+                    int arr_posx = (int)posx + MAP_LENGTH / 2 + x;
+                    int arr_posz = (int)posz + MAP_LENGTH / 2 + z;
+                    if (arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
+                        map_ocupation[(int)(posx + MAP_LENGTH / 2) + x][(int)(posz + MAP_LENGTH / 2) + z] = 1; // Marca as posições ao redor como ocupadas
                 }
             }
         }
-        if(i%2 == 0){
-            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'M', HUMANOIDBOX)); 
+        if (i % 2 == 0)
+        {
+            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'M', HUMANOIDBOX));
         }
-        else{
-            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX)); 
+        else
+        {
+            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX));
         }
     }
 
-    // TREES CREATION
-    #define NUM_TREES 30
-    std::vector<std::pair<float,float>> tree_positions;
-    for(int i = 0; i < NUM_TREES; i++)
+// TREES CREATION
+#define NUM_TREES 30
+    std::vector<std::pair<float, float>> tree_positions;
+    for (int i = 0; i < NUM_TREES; i++)
     {
         float posx = 0;
         float posz = 0;
         int j = 0;
-        do{
-            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
-            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
-            j++;
-        }while(map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] != 0); // Verifica se a posição já está ocupada por outro objeto
-        // ocupa as posições envolta da arvore
-        for(int x = -3; x <= 3; x++)
+        do
         {
-            for(int z = -3; z <= 3; z++){
-                if(x != 0 || z != 0){
-                    int arr_posx = (int)posx + MAP_LENGTH/2 + x;
-                    int arr_posz = (int)posz + MAP_LENGTH/2 + z;
-                    if(arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
-                        map_ocupation[(int)(posx + MAP_LENGTH/2) + x][(int)(posz + MAP_LENGTH/2) + z] = 1; // Marca as posições ao redor como ocupadas
+            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+            j++;
+        } while (map_ocupation[(int)(posx + MAP_LENGTH / 2)][(int)(posz + MAP_LENGTH / 2)] != 0); // Verifica se a posição já está ocupada por outro objeto
+        // ocupa as posições envolta da arvore
+        for (int x = -3; x <= 3; x++)
+        {
+            for (int z = -3; z <= 3; z++)
+            {
+                if (x != 0 || z != 0)
+                {
+                    int arr_posx = (int)posx + MAP_LENGTH / 2 + x;
+                    int arr_posz = (int)posz + MAP_LENGTH / 2 + z;
+                    if (arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
+                        map_ocupation[(int)(posx + MAP_LENGTH / 2) + x][(int)(posz + MAP_LENGTH / 2) + z] = 1; // Marca as posições ao redor como ocupadas
                 }
             }
         }
         tree_positions.push_back(std::make_pair(posx, posz)); // Adiciona a posição da árvore na lista de posições
     }
     Cube tree_BBOX = TREEBOX;
-    #define LEON_SPEED 2.0f
-    #define LEON_HP 10.0f
-    #define INITIAL_POS glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) // Posição inicial do Leon
-    #define INITIAL_VIEW glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) // Vetor de visão inicial do Leon
+    Sphere bunny_BBOX = BUNNYBOX;
+#define LEON_SPEED 2.0f
+#define LEON_HP 10.0f
+#define INITIAL_POS glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)  // Posição inicial do Leon
+#define INITIAL_VIEW glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) // Vetor de visão inicial do Leon
 
     struct Player Leon(INITIAL_POS, INITIAL_VIEW, LEON_SPEED, LEON_HP, HUMANOIDBOX);
     double shootinganim = 0.0f;
     double reloadinganim = 0.0f;
 
-    // BUNNY CREATION
-    #define BUNNY_BOUNDING_BOX Sphere(glm::vec3(0.0f, 0.0f, 0.0f), 0.5f);
-    #define NUM_BUNNIES 5
-    
-    std::vector<std::pair<float,float>> bunny_positions;
-    for(int i = 0; i < NUM_BUNNIES; i++)
+// BUNNY CREATION
+#define NUM_BUNNIES 5
+#define BUNNY_MAX_SPEED 800
+
+    std::vector<Bunny> bunnies;
+    for (int i = 0; i < NUM_BUNNIES; i++)
     {
         float posx = 0;
         float posz = 0;
         int j = 0;
-        do{
-            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
-            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN)*(rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
-            j++;
-        }while(map_ocupation[(int)(posx + MAP_LENGTH/2)][(int)(posz + MAP_LENGTH/2)] != 0); // Verifica se a posição já está ocupada por outro objeto
-
-        for(int x = -3; x <= 3; x++)
+        do
         {
-            for(int z = -3; z <= 3; z++){
-                if(x != 0 || z != 0){
-                    int arr_posx = (int)posx + MAP_LENGTH/2 + x;
-                    int arr_posz = (int)posz + MAP_LENGTH/2 + z;
-                    if(arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
-                        map_ocupation[(int)(posx + MAP_LENGTH/2) + x][(int)(posz + MAP_LENGTH/2) + z] = 1; // Marca as posições ao redor como ocupadas
+            posx = ((rand() % (X_MAX - X_MIN + 1)) + X_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre X_MIN e X_MAX, podendo ser negativo
+            posz = ((rand() % (Z_MAX - Z_MIN + 1)) + Z_MIN) * (rand() % 2 == 0 ? 1 : -1); // Gera um número aleatório entre Z_MIN e Z_MAX, podendo ser negativo
+            j++;
+        } while (map_ocupation[(int)(posx + MAP_LENGTH / 2)][(int)(posz + MAP_LENGTH / 2)] != 0); // Verifica se a posição já está ocupada por outro objeto
+
+        for (int x = -3; x <= 3; x++)
+        {
+            for (int z = -3; z <= 3; z++)
+            {
+                if (x != 0 || z != 0)
+                {
+                    int arr_posx = (int)posx + MAP_LENGTH / 2 + x;
+                    int arr_posz = (int)posz + MAP_LENGTH / 2 + z;
+                    if (arr_posx >= 0 && arr_posx < MAP_LENGTH && arr_posz >= 0 && arr_posz < MAP_LENGTH)
+                        map_ocupation[(int)(posx + MAP_LENGTH / 2) + x][(int)(posz + MAP_LENGTH / 2) + z] = 1; // Marca as posições ao redor como ocupadas
                 }
             }
         }
-        bunny_positions.push_back(std::make_pair(posx, posz)); 
+        Bunny cur_bunny;
+        cur_bunny.taken = false;
+        cur_bunny.cur_position = glm::vec4(posx, 0.0f, posz, 1.0f);
+        cur_bunny.bunny_path = generateRandomBezierPath(cur_bunny.cur_position, 3, -3);
+        /*Bezier_path* teste = cur_bunny.bunny_path;
+        while(teste->next_curve != NULL){
+            printf("Coelho %d: Ponto 0 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[0].x), (teste->cur_curve.points[0].z));
+            printf("Coelho %d: Ponto 1 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[1].x), (teste->cur_curve.points[1].z));
+            printf("Coelho %d: Ponto 2 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[2].x), (teste->cur_curve.points[2].z));
+            printf("Coelho %d: Ponto 3 da curva %d: x: %f z: %f\n", i, teste->curve_num, (teste->cur_curve.points[3].x), (teste->cur_curve.points[3].z));
+            teste = teste->next_curve;
+        }*/
+        cur_bunny.prev_position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        cur_bunny.bunny_time = 0.0f;
+        cur_bunny.ang = 0.0f;
+        cur_bunny.bunny_speed = (1 + rand() % BUNNY_MAX_SPEED) / 100.0f;
+        bunnies.push_back(cur_bunny);
     }
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
@@ -586,12 +615,12 @@ int main(int argc, char *argv[])
         glm::vec4 camera_view_vector; // Vetor "view", sentido para onde a câmera está virada
         // printa o vetor deslocar
         // printf("Deslocar: (%f, %f, %f)\n", deslocar.x, deslocar.y, deslocar.z);
-        Leon.direction = glm::vec4(x, -y, z, 0.0f);                                         // Vetor "view", sentido para onde o player está virado
-        glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);                                       // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        Leon.direction = glm::vec4(x, -y, z, 0.0f);                     // Vetor "view", sentido para onde o player está virado
+        glm::vec4 camera_up_vector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         double timenow = glfwGetTime();
         if (first_person_view == false)
         {
-            camera_position_c = Leon.position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - Leon.direction  ;
+            camera_position_c = Leon.position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - Leon.direction;
             if (camera_position_c.y <= 0.05f)
                 camera_position_c.y = 0.05f;
             camera_view_vector = normalize(Leon.position + glm::vec4(0.0f, 1.5f, 0.0f, 0.0f) - camera_position_c);
@@ -603,7 +632,7 @@ int main(int argc, char *argv[])
         }
         Leon.view_frente = -camera_view_vector / norm(camera_view_vector);
         Leon.view_lado = crossproduct(camera_up_vector, Leon.view_frente) / norm(crossproduct(camera_up_vector, Leon.view_frente));
-        Leon.view_frente.y = 0.0f;                          // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
+        Leon.view_frente.y = 0.0f;                                    // Forçamos o vetor "view_frente" a ser paralelo ao plano XZ
         Leon.view_frente = Leon.view_frente / norm(Leon.view_frente); // Normalizamos o vetor "view_frente"
         glm::vec4 timenowvec = glm::vec4(timenow, timenow, timenow, 0.0f);
         double timedif = timenowvec.x - timeprevec.x;
@@ -617,15 +646,19 @@ int main(int argc, char *argv[])
         }
         if (!paused)
         {
-            if(g_LeftMouseButtonPressed && Leon.shooting == false && shootinganim <= 0.1f && Leon.reloading == false){
-                if(Leon.ammo == 0)
+            if (g_LeftMouseButtonPressed && Leon.shooting == false && shootinganim <= 0.1f && Leon.reloading == false)
+            {
+                if (Leon.ammo == 0)
                     Leon.reloading = true;
-                else{
+                else
+                {
                     glm::vec4 shotdir = Leon.direction;
                     Leon.ammo--;
-                    for(int i = 0; i < NUM_ENEMIES; i++){
-                        if(enemies[i].alive == true){
-                            if(enemies[i].boundingBox.colideWithRay(shotdir, Leon.position, enemies[i].position))
+                    for (int i = 0; i < NUM_ENEMIES; i++)
+                    {
+                        if (enemies[i].alive == true)
+                        {
+                            if (enemies[i].boundingBox.colideWithRay(shotdir, Leon.position, enemies[i].position))
                                 enemies[i].alive = false;
                         }
                     }
@@ -635,20 +668,23 @@ int main(int argc, char *argv[])
                 g_muzzleFlashActive = true;
                 g_muzzleFlashTimer = 0.1f;
             }
-            if(Leon.shooting == true){
-                shootinganim += 20*timedif;
-                if(shootinganim >= 1.0f)
+            if (Leon.shooting == true)
+            {
+                shootinganim += 20 * timedif;
+                if (shootinganim >= 1.0f)
                     Leon.shooting = false;
             }
-            if(Leon.reloading == true){
-                reloadinganim += 10*timedif;
-                if(reloadinganim >= 3.0){
+            if (Leon.reloading == true)
+            {
+                reloadinganim += 10 * timedif;
+                if (reloadinganim >= 3.0)
+                {
                     Leon.reloading = false;
                     Leon.ammo = 7;
                 }
             }
-            shootinganim = (shootinganim >= 0.1f) ? shootinganim-(timedif*10) : 0.0f;
-            reloadinganim = (reloadinganim >= 0.1f) ? reloadinganim -(timedif*5) : 0.0f;
+            shootinganim = (shootinganim >= 0.1f) ? shootinganim - (timedif * 10) : 0.0f;
+            reloadinganim = (reloadinganim >= 0.1f) ? reloadinganim - (timedif * 5) : 0.0f;
             if (w_press)
                 Leon.move((timenowvec - timeprevec), 'F', gravity);
             if (a_press)
@@ -659,24 +695,29 @@ int main(int argc, char *argv[])
                 Leon.move((timenowvec - timeprevec), 'R', gravity);
             Leon.jump(gravity, (timenowvec - timeprevec), space_press);
             space_press = false;
-            if(shift_press){
+            if (shift_press)
+            {
                 Leon.running = true;
             }
-            else {
+            else
+            {
                 Leon.running = false;
             }
             Leon.run((timenowvec - timeprevec));
 
-            for(int i = 0; i < NUM_ENEMIES; i++ ){
-                if(enemies[i].alive == true){
+            for (int i = 0; i < NUM_ENEMIES; i++)
+            {
+                if (enemies[i].alive == true)
+                {
                     enemies[i].player_spot(Leon.position);
                     enemies[i].aggressive_direction(Leon.position);
                     bool canmove = true;
-                    for(int j = 0; j < NUM_TREES; j++){
-                        if(enemies[i].boundingBox.colideWithCube(TREEBOX, enemies[i].position + enemies[i].direction, glm::vec4(tree_positions[j].first, 0.0f, tree_positions[j].second, 1.0f)))
+                    for (int j = 0; j < NUM_TREES; j++)
+                    {
+                        if (enemies[i].boundingBox.colideWithCube(TREEBOX, enemies[i].position + enemies[i].direction, glm::vec4(tree_positions[j].first, 0.0f, tree_positions[j].second, 1.0f)))
                             canmove = false;
                     }
-                    if(canmove)
+                    if (canmove)
                         enemies[i].move(timedif);
                     if (enemies[i].boundingBox.colideWithCube(HUMANOIDBOX, enemies[i].position, Leon.position))
                     {
@@ -685,14 +726,29 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            bool collision[3] = {false,false, false};
-            for(int i = 0; i < NUM_TREES; i++){
+            for(int i = 0; i < NUM_BUNNIES; i++){
+                if(bunnies[i].taken == false){
+                    if(bunny_BBOX.colideWithPoint(bunnies[i].cur_position, Leon.position))
+                    {
+                        printf("Pegou Coelho %d!\n", i);
+                        bunnies[i].taken = true;
+                        amountbunniestaken++;
+                    }
+                }
+            }
+            if(amountbunniestaken == NUM_BUNNIES){
+                printf("PARABENS, VOCE PEGOU TODOS COELHOS! GASTAL ESTA ORGULHOSO!\n");
+                glfwSetWindowShouldClose(window, GL_TRUE);
+            }
+            bool collision[3] = {false, false, false};
+            for (int i = 0; i < NUM_TREES; i++)
+            {
                 glm::vec4 treepos = glm::vec4(tree_positions[i].first, 0.0f, tree_positions[i].second, 1.0f);
-                if(tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.deslocar.x, Leon.position.y, Leon.position.z, 1.0f)))
+                if (tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.deslocar.x, Leon.position.y, Leon.position.z, 1.0f)))
                     collision[0] = true;
-                if(tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.deslocar.y, Leon.position.z, 1.0f)))
+                if (tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.deslocar.y, Leon.position.z, 1.0f)))
                     collision[1] = true;
-                if(tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.position.y, Leon.deslocar.z, 1.0f)))
+                if (tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.position.y, Leon.deslocar.z, 1.0f)))
                     collision[2] = true;
             }
             Leon.deslocar.x = (collision[0]) ? Leon.position.x : Leon.deslocar.x;
@@ -724,8 +780,8 @@ int main(int argc, char *argv[])
         glm::mat4 projection;
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
-        float nearplane = -0.1f; // Posição do "near plane"
-        float farplane = -50.0f; // Posição do "far plane"
+        float nearplane = -0.1f;  // Posição do "near plane"
+        float farplane = -200.0f; // Posição do "far plane"
         if (g_UsePerspectiveProjection)
         {
             // Projeção Perspectiva.
@@ -754,23 +810,23 @@ int main(int argc, char *argv[])
         // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform, 1, GL_FALSE, glm::value_ptr(projection));
-        #define GOURAUD 0
-        #define PHONG 1
+#define GOURAUD 0
+#define PHONG 1
 
-        #define SPHERE 0
-        #define BUNNY 1
-        #define PLANE 2
-        #define WINE 3
-        #define GUN 4
-        #define LEON 5
-        #define MALEZOMBIE 6
-        #define FEMALEZOMBIE 7
-        #define WOOD 8
-        #define TREE 9
-        #define HOUSE 10
-        #define FENCE 11
+#define SPHERE 0
+#define BUNNY 1
+#define PLANE 2
+#define WINE 3
+#define GUN 4
+#define LEON 5
+#define MALEZOMBIE 6
+#define FEMALEZOMBIE 7
+#define WOOD 8
+#define TREE 9
+#define HOUSE 10
+#define FENCE 11
 
-        glUniform1i(g_shading_model_uniform,PHONG);
+        glUniform1i(g_shading_model_uniform, PHONG);
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, rocky_terrain_id);
         // Desenhamos o plano do chão
@@ -778,33 +834,41 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
-        // printf("%f\n", (bunnybrezt));
 
-            
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, earth_id);
-        double b_speed = 6.0f;
-        if (!paused)
-        {
-            brez_pos = move_along_bezier_path(coelhito_path, &bunnybrezt, b_speed, timedif);
-            ang = direction_angle(prev_brez_pos, brez_pos);
-            prev_brez_pos = brez_pos;
-        }
-        model = Matrix_Translate(brez_pos.x, 0.3f, brez_pos.z) * Matrix_Scale(0.3f, 0.3f, 0.3f) * Matrix_Rotate_Y(ang + M_PI / 2);
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, BUNNY);
-        DrawVirtualObject("the_bunny");
 
-        for(int i = 0; i < NUM_ENEMIES; i++){
+        for (int i = 0; i < NUM_BUNNIES; i++)
+        {
+            if (bunnies[i].taken == false)
+            {
+                if (!paused)
+                {
+                    bunnies[i].prev_position = bunnies[i].cur_position;
+                    bunnies[i].cur_position = move_along_bezier_path(bunnies[i].bunny_path, &(bunnies[i].bunny_time), bunnies[i].bunny_speed, timedif);
+                }
+                bunnies[i].ang = direction_angle(bunnies[i].prev_position, bunnies[i].cur_position);
+                model = Matrix_Translate(bunnies[i].cur_position.x, 0.3f, bunnies[i].cur_position.z) *Matrix_Scale(0.3f, 0.3f, 0.3f) * Matrix_Rotate_Y(bunnies[i].ang + M_PI / 2);
+                glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+                glUniform1i(g_object_id_uniform, BUNNY);
+                DrawVirtualObject("the_bunny");
+            }
+        }
+
+        for (int i = 0; i < NUM_ENEMIES; i++)
+        {
             char zomb[3] = {1, 1, 1};
-            if(enemies[i].alive == true){
-                if(enemies[i].type == 'F'){
+            if (enemies[i].alive == true)
+            {
+                if (enemies[i].type == 'F')
+                {
                     // FEMALE ZOMBIE
                     model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(enemies[i].direction.x, enemies[i].direction.z));
                     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
                     DrawVirtualObjectMtl(zomb, sizeof(zomb), &femalezombiemodel, femalezombie_textures, FEMALEZOMBIE);
                 }
-                else if (enemies[i].type == 'M'){
+                else if (enemies[i].type == 'M')
+                {
                     // MALE ZOMBIE
                     model = Matrix_Translate(enemies[i].position.x, enemies[i].position.y, enemies[i].position.z) * Matrix_Rotate_X(-M_PI / 2.0f) * Matrix_Rotate_Z(atan2(enemies[i].direction.x, enemies[i].direction.z));
                     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -812,48 +876,51 @@ int main(int argc, char *argv[])
                 }
             }
         }
-        
-        glUniform1i(g_shading_model_uniform,GOURAUD);
+
+        glUniform1i(g_shading_model_uniform, GOURAUD);
         char woodraw[1] = {1};
         model = Matrix_Translate(0.0f, 1.0f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glDisable(GL_CULL_FACE); 
+        glDisable(GL_CULL_FACE);
         DrawVirtualObjectMtl(woodraw, sizeof(woodraw), &woodmodel, wood_textures, WOOD);
         glEnable(GL_CULL_FACE);
 
-        glUniform1i(g_shading_model_uniform,PHONG);
-        for(int i = 0; i < NUM_TREES; i++){
+        glUniform1i(g_shading_model_uniform, PHONG);
+        for (int i = 0; i < NUM_TREES; i++)
+        {
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, tree_mask_id);
             char treedraw[1] = {1};
-            model = Matrix_Translate(tree_positions[i].first, 0.0f, tree_positions[i].second) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);;
+            model = Matrix_Translate(tree_positions[i].first, 0.0f, tree_positions[i].second) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);
+            ;
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glDisable(GL_CULL_FACE); 
+            glDisable(GL_CULL_FACE);
             DrawVirtualObjectMtl(treedraw, sizeof(treedraw), &treemodel, tree_textures, TREE);
             glEnable(GL_CULL_FACE);
         }
-        
 
-        char housedraw[3] = {1,1,1};
-        model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f); 
+        char housedraw[3] = {1, 1, 1};
+        model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         DrawVirtualObjectMtl(housedraw, sizeof(housedraw), &housemodel, house_textures, HOUSE);
-        char chaindraw[3] = {1,1,1};
-        for(int j = 0; j < 2; j++){
-            int variacao_x = (j%2) ? 0 : 1;
-            int variacao_z = (j%2) ? 1 : 0;
-            for(int i = 1 - j; i < 51 - j; i++){
-                model = Matrix_Scale(1.0f, 1.0f, 1.0f) * Matrix_Translate(50.0f - (i*variacao_x)*2, 0.0f, 50.0f - (i*variacao_z)*2)*Matrix_Rotate_Y(j*M_PI/2  + M_PI); 
+        char chaindraw[3] = {1, 1, 1};
+        for (int j = 0; j < 2; j++)
+        {
+            int variacao_x = (j % 2) ? 0 : 1;
+            int variacao_z = (j % 2) ? 1 : 0;
+            for (int i = 1 - j; i < 51 - j; i++)
+            {
+                model = Matrix_Scale(1.0f, 1.0f, 1.0f) * Matrix_Translate(50.0f - (i * variacao_x) * 2, 0.0f, 50.0f - (i * variacao_z) * 2) * Matrix_Rotate_Y(j * M_PI / 2 + M_PI);
                 glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);    
+                DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);
             }
-            for(int i = 1 - j; i < 51 - j; i++){
-                model = Matrix_Scale(1.0f, 1.0f, 1.0f) * Matrix_Translate(-50.0f + (i*variacao_x)*2, 0.0f, -50.0f + (i*variacao_z)*2)*Matrix_Rotate_Y(j*M_PI/2); 
+            for (int i = 1 - j; i < 51 - j; i++)
+            {
+                model = Matrix_Scale(1.0f, 1.0f, 1.0f) * Matrix_Translate(-50.0f + (i * variacao_x) * 2, 0.0f, -50.0f + (i * variacao_z) * 2) * Matrix_Rotate_Y(j * M_PI / 2);
                 glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-                DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);    
-            }  
+                DrawVirtualObjectMtl(chaindraw, sizeof(chaindraw), &chainfencemodel, chainfence_textures, FENCE);
+            }
         }
-
 
         glUseProgram(g_GpuProgramSkyboxID);
         glDepthFunc(GL_LEQUAL);
@@ -867,7 +934,6 @@ int main(int argc, char *argv[])
         glCullFace(GL_BACK);
         glDepthFunc(GL_LESS);
 
-        
         if (first_person_view == false)
         {
             // LEON
@@ -879,19 +945,17 @@ int main(int argc, char *argv[])
             char leon_mask[8] = {0, 0, 1, 1, 1, 1, 1, 1};
             DrawVirtualObjectMtl(leon_mask, sizeof(leon_mask), &leonmodel, leon_textures, LEON);
         }
-        else{
+        else
+        {
             char gundraw[1] = {1};
             glClear(GL_DEPTH_BUFFER_BIT);
             glm::mat4 gun_view_matrix = Matrix_Identity();
             glUniformMatrix4fv(g_view_uniform, 1, GL_FALSE, glm::value_ptr(gun_view_matrix));
-            model = Matrix_Translate(0.8f, -0.6f, -1.5f + reloadinganim)                   
-              * Matrix_Rotate_Y(M_PI)     
-              * Matrix_Scale(0.4f, 0.4f, 0.4f)
-              * Matrix_Rotate_X(-shootinganim + reloadinganim);
+            model = Matrix_Translate(0.8f, -0.6f, -1.5f + reloadinganim) * Matrix_Rotate_Y(M_PI) * Matrix_Scale(0.4f, 0.4f, 0.4f) * Matrix_Rotate_X(-shootinganim + reloadinganim);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             DrawVirtualObjectMtl(gundraw, sizeof(gundraw), &gunmodel, gun_textures, GUN);
         }
-        glUniform1i(g_point_light_active_uniform, g_muzzleFlashActive&&Leon.shooting==true);
+        glUniform1i(g_point_light_active_uniform, g_muzzleFlashActive && Leon.shooting == true);
         if (g_muzzleFlashActive)
         {
             // Posição da luz: um pouco à frente da câmera.
@@ -907,7 +971,8 @@ int main(int argc, char *argv[])
         // terceiro cubo.
         TextRendering_ShowStamina(window, Leon.stamina, Leon.staminamax);
         TextRendering_ShowAmmo(window, Leon.ammo, 7);
-        if(first_person_view == true){
+        if (first_person_view == true)
+        {
             TextRendering_Crosshair(window);
         }
         // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
@@ -1014,7 +1079,7 @@ std::map<std::string, GLuint> LoadTexturesFromObjModel(ObjModel *model, std::str
             GLuint loaded_texture_id = LoadTextureImage(texpath.c_str(), 1);
             texture_name_to_id[material.diffuse_texname] = loaded_texture_id;
         }
-        if(!material.alpha_texname.empty() && texture_name_to_id.count(material.alpha_texname) == 0)
+        if (!material.alpha_texname.empty() && texture_name_to_id.count(material.alpha_texname) == 0)
         {
             std::string texpath = base_path + material.alpha_texname;
 
@@ -1078,14 +1143,15 @@ void DrawVirtualObjectMtl(char obj_list[], int arrsize, ObjModel *model, std::ma
                 GLuint texture_id = textures_name_to_id[material.diffuse_texname];
                 glBindTexture(GL_TEXTURE_2D, texture_id);
             }
-            if(!material.alpha_texname.empty()){
+            if (!material.alpha_texname.empty())
+            {
                 glUniform1i(g_has_texture_uniform, 2);
                 glActiveTexture(GL_TEXTURE1);
 
                 GLuint texture_id = textures_name_to_id[material.alpha_texname];
                 glBindTexture(GL_TEXTURE_2D, texture_id);
             }
-            if(material.alpha_texname.empty() && material.diffuse_texname.empty())
+            if (material.alpha_texname.empty() && material.diffuse_texname.empty())
             {
                 // Diz ao shader que NÃO TEMOS uma textura, então ele deve usar apenas a cor
                 glUniform1i(g_has_texture_uniform, 0);
@@ -2118,42 +2184,18 @@ void PrintObjModelInfo(ObjModel *model)
 
 double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point)
 {
-    glm::vec3 dir_vec = normalize(cur_point - prev_point);
-    double angle = dot(dir_vec, glm::vec3(0.0f, 0.0f, 1.0f));
-    if (glm::length(dir_vec) == 0.0f)
+    glm::vec3 dir_vec = (cur_point - prev_point);
+    if (glm::length(dir_vec) > 0.0f)
     {
+        double angle = dot(dir_vec, glm::vec3(0.0f, 0.0f, 1.0f));
+        return atan2(dir_vec.x, dir_vec.z);
+    }
+    else
         return 0.0f;
-    }
-    return atan2(dir_vec.x, dir_vec.z);
 }
 
-#define MAX_CURVES 3
-
-Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, int min_distance_points)
-{   
-    Bezier_path *path = new Bezier_path();
-    unsigned seed = time(0);
-    srand(seed);
-    glm::vec4 curves[MAX_CURVES][4];
-    for(int i = 0; i < MAX_CURVES; i++){
-        if(i == 0){
-            curves[i][0] = start;
-            curves[i][1] = start + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
-            curves[i][2] = curves[i][1] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
-            curves[i][3] = curves[i][2] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
-            Bezier_curve curve = define_cubic_bezier(curves[i]);
-            path = create_path(curve);
-        }
-        else{
-            curves[i][0] = curves[i-1][3] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
-            curves[i][1] = curves[i][0] + glm::vec4(min_distance_points + rand() % max_distance_points, 0.0f, min_distance_points + rand() % max_distance_points, 0.0f);
-            path = link_curve_to_path(path, curves[i]);
-        }
-    }
-    return path;
-}
-
-void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstamina){
+void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstamina)
+{
     if (!g_ShowInfoText)
         return;
 
@@ -2165,7 +2207,8 @@ void TextRendering_ShowStamina(GLFWwindow *window, float stamina, float maxstami
     TextRendering_PrintString(window, buffer, -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
 }
 
-void TextRendering_ShowAmmo(GLFWwindow *window, int ammo, int maxammo){
+void TextRendering_ShowAmmo(GLFWwindow *window, int ammo, int maxammo)
+{
     if (!g_ShowInfoText)
         return;
 
@@ -2175,15 +2218,15 @@ void TextRendering_ShowAmmo(GLFWwindow *window, int ammo, int maxammo){
     char buffer[80];
     snprintf(buffer, 80, "Ammo: %d/%d\n", ammo, maxammo);
 
-    TextRendering_PrintString(window, buffer, -1.0f + 25*charwidth, -1.0f + 2 * pad / 10, 1.0f);
+    TextRendering_PrintString(window, buffer, -1.0f + 25 * charwidth, -1.0f + 2 * pad / 10, 1.0f);
 }
 
-void TextRendering_Crosshair(GLFWwindow *window){
-    float scale = 1.5f; 
-    
+void TextRendering_Crosshair(GLFWwindow *window)
+{
+    float scale = 1.5f;
+
     float char_width = TextRendering_CharWidth(window) * scale;
     float char_height = TextRendering_LineHeight(window) * scale;
-            
-    
+
     TextRendering_PrintString(window, "+", -char_width / 2.0f, -char_height / 2.0f, scale);
 }

@@ -23,7 +23,7 @@ struct Sphere {
 
     Sphere(const glm::vec3& c, float r);
 
-    bool colideWithPoint(const glm::vec3& ponto) const;
+    bool colideWithPoint(const glm::vec3 deslocamentocentro, glm::vec3 ponto) const;
 };
 
 // Estrutura para um cubo (AABB)

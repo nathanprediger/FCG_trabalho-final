@@ -4,9 +4,9 @@ Plane::Plane(const glm::vec3 &n, const glm::vec3 &p) : normal(n), point(p) {}
 
 Sphere::Sphere(const glm::vec3 &c, float r) : center(c), radius(r) {}
 
-bool Sphere::colideWithPoint(const glm::vec3 &ponto) const
+bool Sphere::colideWithPoint(const glm::vec3 deslocamentocentro, glm::vec3 ponto) const
 {
-    return glm::length(ponto - center) <= radius;
+    return glm::length(ponto - (center + deslocamentocentro)) <= radius;
 }
 
 Cube::Cube(const glm::vec3 &m, const glm::vec3 &n) : max(m), min(n) {}

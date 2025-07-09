@@ -59,11 +59,8 @@ double approximate_curve_size(glm::vec4 points[4], int approx_precision){
 
 Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]){
     Bezier_path* atual = path;
-    while(atual->next_curve != NULL){
-        //incrementa "depth"
-        atual->curve_num++;
+    while(atual->next_curve != NULL)
         atual = atual->next_curve;
-    }
     // faz a "oposicao" do penultimo ponto de uma e do segundo da outra em relacao ao que fica entre eles
     glm::vec4 last_two_points_path[2] = {atual->cur_curve.points[2], atual->cur_curve.points[3]};
     glm::vec4 first_point_curve = last_two_points_path[1] + (last_two_points_path[1] - last_two_points_path[0]);
@@ -72,10 +69,8 @@ Bezier_path* link_curve_to_path(Bezier_path* path, glm::vec4 curva[2]){
     glm::vec4 points[4] = {last_two_points_path[1], first_point_curve, curva[0], curva[1]};
     Bezier_curve nova_curva = define_cubic_bezier(points);
     novo_path->cur_curve = nova_curva;
-    novo_path->curve_num = 1;
     novo_path->next_curve = NULL;
     //incrementa "depth" do ultimo
-    atual->curve_num++;
     atual->next_curve = novo_path;
     return path;
 }
@@ -102,21 +97,63 @@ Bezier_path* create_path(Bezier_curve curva){
     Bezier_path* novo_path = (Bezier_path*)malloc(sizeof(Bezier_path));
     novo_path->cur_curve = curva;
     novo_path->next_curve = NULL;
-    novo_path->curve_num = 1; // ultimo nodo do path, depois sera incrementado
     return novo_path;
 }
 
 //FUNCAO PARA ANDAR DE FATO AO LONGO DO CAMINHO DEFINIDO PELAS CURVAS.
 glm::vec4 move_along_bezier_path(Bezier_path* path, double *t, double speedmult, double timedif){
-    Bezier_path atual = *path; // DEFINIMOS CURVA ATUAL
-    int t_int = (int)floor(abs(*t)); //T_INT É USADO PARA ACHAR QUAL CURVA DEVEMOS MEXER,
-    // PODE SER TROCADO DEPOIS PARA REFLETIR MUDANÇAS PROPOSTAS NOS COMENTARIOS ACIMA
-    while(t_int != (path->curve_num - atual.curve_num) && atual.next_curve != NULL)
-        atual = *atual.next_curve; //Percorremos a lista de curvas até chegarmos ou na ultima curva ou na correspondente ao t atual
-    if(t_int != (path->curve_num - atual.curve_num)) // caso estejamos na ultima curva mas t indica que deveriamos estar na proxima (não existe)
-    //NULL INVERTE t para -t_int, assim já que utilizamos abs na funcao cubic_bezier_curve, iremos, por exemplo, de 1.01
-    // que esta fora do range [0, 1] para -0.999, que apos o abs fica 0.999 então dentro do range [0, 1], agora o incremento em t faz o caminho de retorno
-        *t = (t_int - 0.001)*-1;
-    return cubic_bezier_curve(atual.cur_curve, t, speedmult, timedif);
+    Bezier_path* atual = path; // DEFINIMOS CURVA ATUAL
+    int t_int = (int)floor(abs(*t)); //T_INT É USADO PARA ACHAR QUAL CURVA DEVEMOS MEXER
+    int prof_curva = 0;
+    while(t_int != prof_curva && atual->next_curve != NULL){
+        prof_curva++;
+        atual = atual->next_curve;
+    }
+    if(t_int != prof_curva)//Devemos fazer o retorno
+        *t = (t_int-0.0001f)*-1.0f;
 
+    return cubic_bezier_curve(atual->cur_curve, t, speedmult, timedif);
+}
+
+#define MAX_CURVES 3
+Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, int min_distance_points)
+{   
+    Bezier_path *path;
+    glm::vec4 offset;
+    int max_diff = abs(min_distance_points) + abs(max_distance_points);
+    glm::vec4 staring_curve[4];
+    glm::vec4 curves[MAX_CURVES][2];
+    for(int i = 0; i < MAX_CURVES; i++){
+        if(i == 0){
+            staring_curve[0] = start;
+            offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            while(length(offset) < 0.1f)
+                offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            staring_curve[1] = staring_curve[0] + offset;
+            offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            while(length(offset) < 0.1f)
+                offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            staring_curve[2] = staring_curve[1] + offset;
+            offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            while(length(offset) < 0.1f)
+                offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            staring_curve[3] = staring_curve[2] + offset;
+            Bezier_curve curve = define_cubic_bezier(staring_curve);
+            path = create_path(curve);
+            curves[0][0] = staring_curve[2];
+            curves[0][1] = staring_curve[3];
+        }
+        else{
+            offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            while(length(offset) < 0.1f)
+                offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            curves[i][0] = curves[i-1][1] +  curves[i-1][1] - curves[i-1][0] + offset;
+            offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            while(length(offset) < 0.1f)
+                offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            curves[i][1] = curves[i][0] + glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
+            path = link_curve_to_path(path, curves[i]);
+        }
+    }
+    return path;
 }
