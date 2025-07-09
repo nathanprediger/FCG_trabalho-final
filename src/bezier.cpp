@@ -125,6 +125,7 @@ Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, 
     glm::vec4 curves[MAX_CURVES][2];
     for(int i = 0; i < MAX_CURVES; i++){
         if(i == 0){
+            //offset de posição não pode ser nulo, coelhinho nao iria se mexer e direção angular poderia dar infinito ou nan
             staring_curve[0] = start;
             offset = glm::vec4(min_distance_points + (rand() % max_diff), 0.0f, min_distance_points + (rand() % max_diff), 0.0f);
             while(length(offset) < 0.1f)
@@ -156,4 +157,16 @@ Bezier_path *generateRandomBezierPath(glm::vec4 start, int max_distance_points, 
         }
     }
     return path;
+}
+
+double direction_angle(glm::vec4 prev_point, glm::vec4 cur_point)
+{
+    glm::vec3 dir_vec = (cur_point - prev_point);
+    if (glm::length(dir_vec) > 0.0f)
+    {
+        double angle = dot(dir_vec, glm::vec3(0.0f, 0.0f, 1.0f));
+        return atan2(dir_vec.x, dir_vec.z);
+    }
+    else
+        return 0.0f;
 }
