@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
     GLuint earth_id = LoadTextureImage("../../data/tc-earth_daymap_surface.jpg", 0);                             // TextureImage0
     GLuint earth_night_id = LoadTextureImage("../../data/tc-earth_nightmap_citylights.gif", 0);                  // TextureImage1
     GLuint rocky_terrain_id = LoadTextureImage("../../data/rocky_terrain_02_diff_1k.jpg", 1);                    // TextureImage2
-    GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_4k.hdr", 0);                  // TextureImage3
+    GLuint skybox_id = LoadTextureImage("../../data/skyboxes/satara_night_no_lamps_2k.hdr", 0);                  // TextureImage3
     GLuint tree_mask_id = LoadTextureImage("../../data/tree/A_5e6233bf8b6646988a1a6e8dc4697172_ped-tga.png", 0); // TextureImage4
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
