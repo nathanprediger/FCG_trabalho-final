@@ -17,7 +17,7 @@
 - Definição das estruturas de Bounding Box e Colisões Cubo-Plano, Cubo-Cubo e Esfera-Plano;
 - Carregar arquivos .obj que utilizam .mtl;
 - Geração dos inimigos e demais objetos pelo mapa.
-As demais features foram implementadas em conjunto, não podendo definir um responsável principal a elas.
+### As demais features foram implementadas em conjunto, não podendo definir um responsável principal a elas.
 ## Utilização de Inteligência artificial 
 Ao longo do desenvolvimento do trabalho, foram utilizadas as IA's ChatGPT, o Copilot do VScode e o Gemini. Essas ferramentas se demonstraram úteis em tarefas especifícas, o Copilot ajudou bastante com a feature de Code Completions para completar linhas automaticamente, aliviando um pouco o trabalho braçal de declarar estruturas ou escrever códigos básicos. Já o Gemini e ChatGPT foram interessantes para debugging do código, encontrando erros na nossa lógica de implementação. Porém, elas ainda não são capazes de implementar grandes trechos de código, servindo mais mesmo como uma ferramenta auxiliar e que não é capaz de substituir o desenvolvedor (por enquanto).
 ## Processo de Desenvolvimento 
