@@ -2,7 +2,7 @@
 ## Descrição
 - O presente projeto trata-se de um jogo 3D desenvolvido para a cadeira de Fundamentos de Computação Gráfica no curso de graduação Ciência da Computação da Universidade Federal do Rio Grande do Sul.
 - A implementação foi feita na linguagem C++, fazendo uso das bibliotecas OpenGL(glfw e glm).
-- A ambientação do jogo é baseada na famosa série de jogos Resident Evil. O jogador está no corpo de Leon S. Kennedy, o famoso personagem da franquia. O seu objetivo, dessa vez, não é proteger a Ashley Graham, mas sim capturar os famosos coelhinhos de Stanford na floresta! O grande problema é que ela está infestada de monstros terríveis e Leon não pode ser infectado por eles, qualquer golpe é fatal! Contudo, Leon está equipado com uma potente Desert Eagle para se defender dos perigos da noite. Será que ele conseguirá sobreviver e voltar com todos os coelinhos para casa?
+- A ambientação do jogo é baseada na famosa série de jogos Resident Evil. O jogador está no corpo de Leon S. Kennedy, o famoso personagem da franquia. O seu objetivo, dessa vez, não é proteger a Ashley Graham, mas sim capturar os famosos coelhinhos de Stanford na floresta! O grande problema é que ela está infestada de monstros terríveis e Leon não pode ser infectado por eles, qualquer golpe é fatal! Contudo, Leon está equipado com uma potente Desert Eagle para se defender dos perigos da noite. Será que ele conseguirá sobreviver e voltar com todos os coelhinhos para casa?
 ## Participação no Desenvolvimento 
 ### André da Silva Frainer
 - Curvas de Bezier;
