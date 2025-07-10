@@ -30,11 +30,11 @@ void Player::move(glm::vec4 diff_time, char direction, float gravity) {
         case 'R': deslocar += speed * speed_multiplier * view_lado * diff_time; break;
         default: break;
     }
-    
-    if(boundingBox.colideWithPlane(boundaries[0], glm::vec3(position.x, position.y, position.z)) || 
-       boundingBox.colideWithPlane(boundaries[1], glm::vec3(position.x, position.y, position.z)) ||
-       boundingBox.colideWithPlane(boundaries[2], glm::vec3(position.x, position.y, position.z)) ||
-       boundingBox.colideWithPlane(boundaries[3], glm::vec3(position.x, position.y, position.z))) {
+    glm::vec3 future_pos = glm::vec3(deslocar.x, deslocar.y, deslocar.z);
+    if(boundingBox.colideWithPlane(boundaries[0], future_pos) || 
+       boundingBox.colideWithPlane(boundaries[1], future_pos) ||
+       boundingBox.colideWithPlane(boundaries[2], future_pos) ||
+       boundingBox.colideWithPlane(boundaries[3], future_pos)) {
         deslocar = deslocar_anterior;
     }
 }

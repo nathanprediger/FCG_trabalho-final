@@ -3,7 +3,7 @@
 Plane::Plane(const glm::vec3 &n, const glm::vec3 &p) : normal(n), point(p) {}
 
 Sphere::Sphere(const glm::vec3 &c, float r) : center(c), radius(r) {}
-
+    
 bool Sphere::colideWithPlane(const Plane &plane, glm::vec3 cur_pos) const
 {
 

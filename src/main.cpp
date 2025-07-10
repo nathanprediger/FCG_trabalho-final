@@ -60,21 +60,24 @@
 
 #define BUNNYBOX Sphere(glm::vec3(0.0f, 0.0f, 0.0f), 0.8f);
 #define HUMANOIDBOX Cube(glm::vec3(0.35f, 2.0f, 0.35f), glm::vec3(-0.35f, 0.0f, -0.35f))
-#define TREEBOX Cube(glm::vec3(0.6, 3.0f, 0.6f), glm::vec3(-0.6f, 0.0f, -0.6f))
+#define TREEBOX Cube(glm::vec3(0.6f, 3.0f, 0.6f), glm::vec3(-0.6f, 0.0f, -0.6f))
+#define LOGBOX Cube(glm::vec3(1.0f, 2.0f, 1.0f), glm::vec3(-1.0f, 0.0f, -1.0f))
 #define MAP_LENGTH 100
 #define X_MIN 5
 #define X_MAX 48
 #define Z_MIN 5
 #define Z_MAX 48
 #define NUM_ENEMIES 15
-#define NUM_TREES 30
+#define NUM_TREES 25
 #define LEON_SPEED 2.0f
 #define LEON_HP 10.0f
 #define LEON_AMMO 7
 #define INITIAL_POS glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)  // Posição inicial do Leon
 #define INITIAL_VIEW glm::vec4(0.0f, 0.0f, 0.0f, 0.0f) // Vetor de visão inicial do Leon
 #define NUM_BUNNIES 5
+#define NUM_LOGS 10
 #define BUNNY_MAX_SPEED 800
+#define TIME_LIMIT 180
 
 typedef struct BUNNY
 {
@@ -199,7 +202,7 @@ void CursorPosCallback(GLFWwindow *window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow *window, double xoffset, double yoffset);
 //Funcoes de geração de objetos
 std::vector<Enemie> generateEnemies(int map_occupation[MAP_LENGTH][MAP_LENGTH]);
-std::vector<std::pair<float, float>> generateTrees(int map_occupation[MAP_LENGTH][MAP_LENGTH]);
+std::vector<std::pair<float, float>> generateStaticObj(int map_occupation[MAP_LENGTH][MAP_LENGTH], int object_quant);
 std::vector<Bunny> generateBunnies(int map_occupation[MAP_LENGTH][MAP_LENGTH]);
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -452,10 +455,11 @@ int main(int argc, char *argv[])
     BuildTrianglesAndAddToVirtualScene(&treemodel);
     std::map<std::string, GLuint> tree_textures = LoadTexturesFromObjModel(&treemodel, "../../data/tree/");
 
-    ObjModel housemodel("../../data/casa/V7NCMVM2CESW8Q4IP1OHYDUES.obj");
-    ComputeNormals(&housemodel);
-    BuildTrianglesAndAddToVirtualScene(&housemodel);
-    std::map<std::string, GLuint> house_textures = LoadTexturesFromObjModel(&housemodel, "../../data/casa/");
+    //modelo do gastal gerado com IA
+    ObjModel gastalmodel("../../data/gastal/gastal.obj");
+    ComputeNormals(&gastalmodel);
+    BuildTrianglesAndAddToVirtualScene(&gastalmodel);
+    std::map<std::string, GLuint> gastal_textures = LoadTexturesFromObjModel(&gastalmodel, "../../data/gastal/");
 
     if (argc > 1)
     {
@@ -484,10 +488,12 @@ int main(int argc, char *argv[])
 int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
 
     std::vector<Enemie> enemies = generateEnemies(map_ocupation);
-    std::vector<std::pair<float, float>> tree_positions = generateTrees(map_ocupation);
+    std::vector<std::pair<float, float>> tree_positions = generateStaticObj(map_ocupation, NUM_TREES);
     std::vector<Bunny> bunnies = generateBunnies(map_ocupation);
+    std::vector<std::pair<float, float> > log_positions = generateStaticObj(map_ocupation, NUM_LOGS);
     Cube tree_BBOX = TREEBOX;
     Sphere bunny_BBOX = BUNNYBOX;
+    Cube log_BBOX = LOGBOX;
     struct Player Leon(INITIAL_POS, INITIAL_VIEW, LEON_SPEED, LEON_HP, HUMANOIDBOX);
     double shootinganim = 0.0f;
     double reloadinganim = 0.0f;
@@ -574,7 +580,11 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
                         if (enemies[i].alive)
                         {
                             if (enemies[i].boundingBox.colideWithRay(shotdir, Leon.position, enemies[i].position))
-                                enemies[i].alive = false;
+                            {
+                                enemies[i].health -= 3;
+                                if(enemies[i].health <= 0)
+                                    enemies[i].alive = false;
+                            }
                         }
                     }
                     ma_sound_start(&deagleshot[Leon.ammo]);
@@ -633,6 +643,11 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
                         if (enemies[i].boundingBox.colideWithCube(TREEBOX, enemies[i].position + enemies[i].direction, glm::vec4(tree_positions[j].first, 0.0f, tree_positions[j].second, 1.0f)))
                             canmove = false;
                     }
+                    for (int j = 0; j < NUM_LOGS; j++)
+                    {
+                        if (enemies[i].boundingBox.colideWithCube(LOGBOX, enemies[i].position + enemies[i].direction, glm::vec4(log_positions[j].first, 0.0f, log_positions[j].second, 1.0f)))
+                            canmove = false;
+                    }
                     if (canmove)
                         enemies[i].move(timedif);
                     if (enemies[i].boundingBox.colideWithCube(HUMANOIDBOX, enemies[i].position, Leon.position))
@@ -667,6 +682,17 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
                 if (tree_BBOX.colideWithPoint(treepos, glm::vec4(Leon.position.x, Leon.position.y, Leon.deslocar.z, 1.0f)))
                     collision[2] = true;
             }
+            for (int i = 0; i < NUM_LOGS; i++)
+            {
+                glm::vec4 logpos = glm::vec4(log_positions[i].first, 0.0f, log_positions[i].second, 1.0f);
+                if (log_BBOX.colideWithPoint(logpos, glm::vec4(Leon.deslocar.x, Leon.position.y, Leon.position.z, 1.0f)))
+                    collision[0] = true;
+                if (log_BBOX.colideWithPoint(logpos, glm::vec4(Leon.position.x, Leon.deslocar.y, Leon.position.z, 1.0f)))
+                    collision[1] = true;
+                if (log_BBOX.colideWithPoint(logpos, glm::vec4(Leon.position.x, Leon.position.y, Leon.deslocar.z, 1.0f)))
+                    collision[2] = true;
+            }
+
             Leon.deslocar.x = (collision[0]) ? Leon.position.x : Leon.deslocar.x;
             Leon.deslocar.y = (collision[1]) ? Leon.position.y : Leon.deslocar.y;
             Leon.deslocar.z = (collision[2]) ? Leon.position.z : Leon.deslocar.z;
@@ -812,13 +838,15 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
             }
         }
 
-        glUniform1i(g_shading_model_uniform, GOURAUD);
-        char woodraw[1] = {1};
-        model = Matrix_Translate(0.0f, 1.0f, 0.0f);
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glDisable(GL_CULL_FACE);
-        DrawVirtualObjectMtl(woodraw, sizeof(woodraw), &woodmodel, wood_textures, WOOD);
-        glEnable(GL_CULL_FACE);
+        for(int i = 0; i < NUM_LOGS; i++){
+            glUniform1i(g_shading_model_uniform, GOURAUD);
+            char woodraw[1] = {1};
+            model = Matrix_Translate(log_positions[i].first, 1.0f, log_positions[i].second);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glDisable(GL_CULL_FACE);
+            DrawVirtualObjectMtl(woodraw, sizeof(woodraw), &woodmodel, wood_textures, WOOD);
+            glEnable(GL_CULL_FACE);
+        }
 
         glUniform1i(g_shading_model_uniform, PHONG);
         for (int i = 0; i < NUM_TREES; i++)
@@ -827,17 +855,16 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
             glBindTexture(GL_TEXTURE_2D, tree_mask_id);
             char treedraw[1] = {1};
             model = Matrix_Translate(tree_positions[i].first, 0.0f, tree_positions[i].second) * Matrix_Scale(0.01f, 0.01f, 0.01f) * Matrix_Rotate_X(-M_PI / 2.0f);
-            ;
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glDisable(GL_CULL_FACE);
             DrawVirtualObjectMtl(treedraw, sizeof(treedraw), &treemodel, tree_textures, TREE);
             glEnable(GL_CULL_FACE);
         }
 
-        char housedraw[3] = {1, 1, 1};
-        model = Matrix_Scale(1.1f, 1.1f, 1.1f) * Matrix_Translate(5.0f, 0.5f, -5.0f);
+        char gastaldraw[1] = {1};
+        model = Matrix_Scale(10.0f, 10.0f, 10.0f) * Matrix_Translate(6.0f, 1.0f, 0.0f)*Matrix_Rotate_Y(-M_PI/2);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        DrawVirtualObjectMtl(housedraw, sizeof(housedraw), &housemodel, house_textures, HOUSE);
+        DrawVirtualObjectMtl(gastaldraw, sizeof(gastaldraw), &gastalmodel, gastal_textures, LEON);
         char chaindraw[3] = {1, 1, 1};
         for (int j = 0; j < 2; j++)
         {
@@ -920,6 +947,11 @@ int map_ocupation[MAP_LENGTH][MAP_LENGTH] = {0};
         TextRendering_ShowTimer(window);
         if(glfwGetTime() < 5.0f)
             TextRendering_ShowStartObjective(window);
+        else if(glfwGetTime() >= TIME_LIMIT)
+        {
+            printf("DEMOROU DEMAIS LERDAO, OS COELHOS FUGIRAM\n");
+            glfwSetWindowShouldClose(window, GL_TRUE);
+        }
         else
             TextRendering_ShowObjectiveProgress(window, amountbunniestaken);
         // O framebuffer onde OpenGL executa as operações de renderização não
@@ -2153,7 +2185,7 @@ void TextRendering_ShowTimer(GLFWwindow *window){
     float charwidth = TextRendering_CharWidth(window);
     float pad = TextRendering_LineHeight(window);
     char buffer[50];
-    snprintf(buffer, 50, "Tempo decorrido: %.2f\n", glfwGetTime());
+    snprintf(buffer, 50, "Tempo restante: %.2f\n", TIME_LIMIT - glfwGetTime());
     TextRendering_PrintString(window, buffer, 0.0f - (double)strlen(buffer)*charwidth/2, 1.0f - pad, 1.0f);
 
 }
@@ -2183,7 +2215,6 @@ void TextRendering_ShowObjectiveProgress(GLFWwindow *window, int coelhinhos){
 }
 std::vector<Enemie> generateEnemies(int map_occupation[MAP_LENGTH][MAP_LENGTH]){
     #define HP 5.0f
-    #define SPEED 2.0f
     std::vector<struct Enemie> enemies;
     for (int i = 0; i < NUM_ENEMIES; i++)
     {
@@ -2212,11 +2243,11 @@ std::vector<Enemie> generateEnemies(int map_occupation[MAP_LENGTH][MAP_LENGTH]){
         }
         if (i % 2 == 0)
         {
-            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'M', HUMANOIDBOX));
+            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 1.0f + rand()%5, HP, 'M', HUMANOIDBOX));
         }
         else
         {
-            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), SPEED, HP, 'F', HUMANOIDBOX));
+            enemies.push_back(Enemie(glm::vec4(posx, 0.0f, posz, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), 1.0f + rand()%5, HP, 'F', HUMANOIDBOX));
         }
         enemies[i].cur_path = generateRandomBezierPath(enemies[i].position, 3, -3);
         enemies[i].prev_position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -2227,9 +2258,9 @@ std::vector<Enemie> generateEnemies(int map_occupation[MAP_LENGTH][MAP_LENGTH]){
     return enemies;
 }
 
-std::vector<std::pair<float, float>> generateTrees(int map_occupation[MAP_LENGTH][MAP_LENGTH]){
+std::vector<std::pair<float, float>> generateStaticObj(int map_occupation[MAP_LENGTH][MAP_LENGTH], int object_quant){
     std::vector<std::pair<float, float>> tree_positions;
-    for (int i = 0; i < NUM_TREES; i++)
+    for (int i = 0; i < object_quant; i++)
     {
         float posx = 0;
         float posz = 0;
